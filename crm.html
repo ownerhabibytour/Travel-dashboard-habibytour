@@ -1,0 +1,2031 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Travel CRM System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        /* Base styles */
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        /* Login Page Styles */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0dbd9b, #0aa385);
+        }
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 380px;
+            max-width: 90%;
+        }
+        .login-box h2 {
+            margin-bottom: 30px;
+            color: #0dbd9b;
+            font-size: 28px;
+        }
+        .login-box .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .login-box label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        .login-box input[type="text"],
+        .login-box input[type="password"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .login-box button {
+            background: #0dbd9b;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s ease;
+            margin-top: 15px;
+        }
+        .login-box button:hover {
+            background: #0aa385;
+        }
+        .login-box .error-message {
+            color: #e74c3c;
+            margin-top: 15px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Main App Layout */
+        .app-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: #222;
+            width: 70px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px 0;
+            gap: 20px;
+            color: #bbb;
+            flex-shrink: 0; /* Prevent sidebar from shrinking */
+        }
+        .sidebar button {
+            background: none;
+            border: none;
+            color: inherit;
+            font-size: 28px;
+            cursor: pointer;
+            position: relative;
+            transition: color 0.3s;
+            width: 100%; /* Make buttons fill sidebar width for hover */
+            height: 60px; /* Uniform height */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .sidebar button:hover,
+        .sidebar button.active {
+            color: #0dbd9b;
+            background-color: #333; /* Slight background change on hover */
+        }
+        .sidebar button .tooltip {
+            position: absolute;
+            left: 75px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #0dbd9b;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            user-select: none;
+            z-index: 100; /* Ensure tooltip is above other content */
+        }
+        .sidebar button:hover .tooltip,
+        .sidebar button.active .tooltip {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .sidebar .logout-button {
+            margin-top: auto; /* Push logout button to the bottom */
+            color: #ccc;
+        }
+        .sidebar .logout-button:hover {
+            color: #e74c3c; /* Red for logout */
+        }
+
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            background: #fff;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+        }
+
+        h2 {
+            color: #0dbd9b;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        h3 {
+            color: #0aa385;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        /* Generic Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden; /* Ensures rounded corners for inner elements */
+        }
+        th, td {
+            padding: 14px 18px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+            font-size: 15px;
+        }
+        th {
+            background-color: #0dbd9b;
+            color: #fff;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #e8f5e9; /* Light green on hover */
+        }
+
+        /* Action Buttons */
+        button.action-btn {
+            background: #0dbd9b;
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 8px;
+            transition: background 0.3s ease, transform 0.2s ease;
+            white-space: nowrap; /* Prevent text wrapping */
+        }
+        button.action-btn.add-btn {
+            background: #28a745; /* Green for add */
+            margin-bottom: 15px;
+        }
+        button.action-btn.add-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        button.action-btn.edit {
+            background: #007bff; /* Blue for edit */
+        }
+        button.action-btn.edit:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        button.action-btn.delete {
+            background: #dc3545; /* Red for delete */
+        }
+        button.action-btn.delete:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+        button.action-btn.view {
+            background: #6c757d; /* Grey for view */
+        }
+        button.action-btn.view:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        /* Form Styles */
+        .form-container {
+            background: #f9f9f9;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            max-width: 700px;
+            margin-top: 25px;
+        }
+        .form-container label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 8px;
+            color: #444;
+        }
+        .form-container input:not([type="checkbox"]):not([type="radio"]),
+        .form-container select,
+        .form-container textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .form-container textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        .form-container button[type="submit"] {
+            background: #0dbd9b;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-right: 10px;
+        }
+        .form-container button[type="submit"]:hover {
+            background: #0aa385;
+        }
+        .form-container button.cancel {
+            background: #aaa;
+            color: #222;
+        }
+        .form-container button.cancel:hover {
+            background: #888;
+        }
+        .form-container .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .form-container .checkbox-group input[type="checkbox"] {
+            margin-right: 10px;
+            width: auto;
+        }
+
+        /* Dashboard specific */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        .dashboard-card {
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            padding: 25px;
+            text-align: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+        }
+        .dashboard-card .icon {
+            font-size: 48px;
+            color: #0dbd9b;
+            margin-bottom: 15px;
+        }
+        .dashboard-card h3 {
+            margin: 0;
+            color: #555;
+            font-size: 18px;
+        }
+        .dashboard-card p {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+            margin-top: 10px;
+        }
+
+        /* Specific section styles */
+        .welcome-message {
+            background: #e8f5e9;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 5px solid #0dbd9b;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        .welcome-message p {
+            margin: 0;
+            font-size: 18px;
+        }
+        .welcome-message strong {
+            color: #0aa385;
+        }
+
+        /* Details View */
+        .details-view {
+            background: #fdfdfd;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-top: 20px;
+        }
+        .details-view h3 {
+            margin-top: 0;
+            color: #0dbd9b;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .details-view p {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        .details-view strong {
+            color: #555;
+            display: inline-block;
+            min-width: 120px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="login-container" id="loginPage">
+        <div class="login-box">
+            <h2>Travel CRM Login</h2>
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Enter your username" />
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter your password" />
+            </div>
+            <button id="loginBtn">Login</button>
+            <p class="error-message" id="loginError"></p>
+            <p style="margin-top: 20px; font-size: 14px; color: #777;">
+                Try:<br/>
+                admin / adminpass<br/>
+                sales / salespass<br/>
+                ops / opspass<br/>
+                tour / tourpass<br/>
+                transfer / transferpass<br/>
+                account / accountpass
+            </p>
+        </div>
+    </div>
+
+    <div class="app-container" id="appContainer" style="display: none;">
+        <nav class="sidebar" id="sidebar" aria-label="Main Sidebar Navigation">
+            <button class="logout-button" aria-label="Logout">
+                <i class="fas fa-sign-out-alt"></i>
+                <span class="tooltip">Logout</span>
+            </button>
+        </nav>
+
+        <main class="main-content" id="mainContent" tabindex="0" aria-live="polite" aria-atomic="true">
+            </main>
+    </div>
+
+<script>
+    // --- Data Storage (Mock Backend) ---
+    // In a real application, this would be fetched from a database via API calls.
+    let loggedInUser = null;
+
+    const users = {
+        'admin': { password: 'adminpass', role: 'admin', name: 'Admin User' },
+        'sales': { password: 'salespass', role: 'sales', name: 'Sara Sales' },
+        'ops': { password: 'opspass', role: 'operations', name: 'Omar Operations' },
+        'tour': { password: 'tourpass', role: 'tour_guide', name: 'Tarek Tour' },
+        'transfer': { password: 'transferpass', role: 'transfer', name: 'Fahad Driver' },
+        'account': { password: 'accountpass', role: 'accounting', name: 'Amira Accountant' },
+    };
+
+    let leadsData = [
+        { id: 'L001', clientName: 'Ahmed Khalid', service: 'Desert Safari', status: 'New', salesAgent: 'Sara Sales', contact: 'ahmed@example.com' },
+        { id: 'L002', clientName: 'Fatima Ali', service: 'City Tour', status: 'Contacted', salesAgent: 'Sara Sales', contact: 'fatima@example.com' },
+    ];
+
+    let bookingsData = [
+        { id: 'B001', leadId: 'L001', service: 'Desert Safari', date: '2025-07-10', status: 'Confirmed', assignedGuide: 'Tarek Tour', assignedTransfer: 'Fahad Driver', amount: 350 },
+        { id: 'B002', leadId: 'L002', service: 'City Tour', date: '2025-07-15', status: 'Pending Guide', assignedGuide: '', assignedTransfer: '', amount: 200 },
+    ];
+
+    let tourGuidesData = [
+        { id: 'TG001', name: 'Tarek Tour', specialization: 'Desert, City', phone: '+971501112222', status: 'Active' },
+        { id: 'TG002', name: 'Lina Explorer', specialization: 'Museums, History', phone: '+971503334444', status: 'Active' },
+    ];
+
+    let vehiclesData = [
+        { id: 'V001', plate: 'DXB-1234', type: 'SUV', capacity: 4, driver: 'Fahad Driver', status: 'Available' },
+        { id: 'V002', plate: 'SHJ-5678', type: 'Van', capacity: 7, driver: 'Kamal Drive', status: 'Available' },
+    ];
+
+    let transactionsData = [
+        { id: 'TRX001', bookingId: 'B001', type: 'Income', description: 'Safari Payment', amount: 350, date: '2025-06-01', status: 'Paid' },
+        { id: 'TRX002', bookingId: 'B002', type: 'Expense', description: 'Guide Fee (pending)', amount: 100, date: '2025-06-02', status: 'Pending' },
+    ];
+
+
+    // --- DOM Elements ---
+    const loginPage = document.getElementById('loginPage');
+    const appContainer = document.getElementById('appContainer');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginError = document.getElementById('loginError');
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('mainContent');
+    const logoutBtn = sidebar.querySelector('.logout-button');
+
+    // --- Helper Functions ---
+    function getStatusColor(status) {
+        switch(status) {
+            case 'New': return '#007bff'; // Blue
+            case 'Contacted': return '#ffc107'; // Yellow
+            case 'Confirmed': return '#28a745'; // Green
+            case 'Pending': return '#ffc107'; // Yellow
+            case 'Completed': return '#28a745'; // Green
+            case 'Cancelled': return '#dc3545'; // Red
+            case 'Active': return '#28a745';
+            case 'On Leave': return '#6c757d'; // Grey
+            case 'Available': return '#28a745';
+            case 'Booked': return '#007bff';
+            case 'Maintenance': return '#6c757d';
+            case 'Paid': return '#28a745';
+            case 'Overdue': return '#dc3545';
+            case 'Pending Guide': return '#ffc107';
+            default: return '#333'; // Default dark grey
+        }
+    }
+
+    function createActionButton(text, className, onClick) {
+        const button = document.createElement('button');
+        button.textContent = text;
+        button.className = `action-btn ${className}`;
+        button.onclick = onClick;
+        return button;
+    }
+
+    function generateUniqueId(prefix) {
+        return prefix + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+    }
+
+    // --- Role-based Sidebar Navigation Configuration ---
+    const roleSidebars = {
+        'admin': [
+            { section: 'admin_dashboard', icon: 'fas fa-cogs', tooltip: 'Admin Dashboard' },
+            { section: 'manage_users', icon: 'fas fa-users-cog', tooltip: 'Manage Users' },
+            { section: 'manage_all_bookings', icon: 'fas fa-book-open', tooltip: 'All Bookings' },
+            { section: 'system_reports', icon: 'fas fa-chart-pie', tooltip: 'System Reports' },
+        ],
+        'sales': [
+            { section: 'sales_dashboard', icon: 'fas fa-chart-line', tooltip: 'Sales Dashboard' },
+            { section: 'leads', icon: 'fas fa-handshake', tooltip: 'Leads Management' },
+            { section: 'sales_bookings', icon: 'fas fa-calendar-check', tooltip: 'My Bookings' },
+            { section: 'sales_reports', icon: 'fas fa-file-invoice-dollar', tooltip: 'Sales Reports' },
+        ],
+        'operations': [
+            { section: 'operations_dashboard', icon: 'fas fa-compass', tooltip: 'Operations Dashboard' },
+            { section: 'manage_bookings', icon: 'fas fa-calendar-alt', tooltip: 'Manage Bookings' },
+            { section: 'manage_guides', icon: 'fas fa-person-hiking', tooltip: 'Tour Guides' },
+            { section: 'manage_vehicles', icon: 'fas fa-car', tooltip: 'Vehicles' },
+            { section: 'operational_reports', icon: 'fas fa-clipboard-list', tooltip: 'Operational Reports' },
+        ],
+        'tour_guide': [
+            { section: 'guide_dashboard', icon: 'fas fa-map-marker-alt', tooltip: 'My Schedule' },
+            { section: 'guide_past_tours', icon: 'fas fa-history', tooltip: 'Past Tours' },
+        ],
+        'transfer': [
+            { section: 'transfer_dashboard', icon: 'fas fa-route', tooltip: 'My Transfers' },
+            { section: 'transfer_history', icon: 'fas fa-archive', tooltip: 'Transfer History' },
+        ],
+        'accounting': [
+            { section: 'accounting_dashboard', icon: 'fas fa-calculator', tooltip: 'Accounting Dashboard' },
+            { section: 'transactions', icon: 'fas fa-exchange-alt', tooltip: 'Transactions' },
+            { section: 'invoices', icon: 'fas fa-receipt', tooltip: 'Invoices' },
+            { section: 'financial_reports', icon: 'fas fa-chart-bar', tooltip: 'Financial Reports' },
+        ],
+    };
+
+    // --- Page Content for Each Section (HTML strings or functions) ---
+    const pageContent = {
+        // --- ADMIN ---
+        admin_dashboard: () => `
+            <div class="welcome-message">
+                <p>Welcome, <strong>${loggedInUser.name}</strong>! This is your Admin Overview.</p>
+            </div>
+            <h2>Admin Dashboard Summary</h2>
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-users-cog"></i></div>
+                    <h3>Total Users</h3>
+                    <p>${Object.keys(users).length}</p>
+                </div>
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-book-open"></i></div>
+                    <h3>Total Bookings</h3>
+                    <p>${bookingsData.length}</p>
+                </div>
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-handshake"></i></div>
+                    <h3>Active Leads</h3>
+                    <p>${leadsData.filter(lead => lead.status !== 'Converted' && lead.status !== 'Lost').length}</p>
+                </div>
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-dollar-sign"></i></div>
+                    <h3>Total Income (YTD)</h3>
+                    <p>$${transactionsData.filter(t => t.type === 'Income' && t.status === 'Paid').reduce((sum, t) => sum + t.amount, 0).toFixed(2)}</p>
+                </div>
+            </div>
+            <h3>Quick Actions</h3>
+            <ul>
+                <li><a href="#" onclick="loadSection('manage_users'); return false;">Manage System Users</a></li>
+                <li><a href="#" onclick="loadSection('manage_all_bookings'); return false;">Review All Bookings</a></li>
+            </ul>
+        `,
+        manage_users: `
+            <h2>Manage System Users</h2>
+            <button id="addAdminUserBtn" class="action-btn add-btn">+ Add New User</button>
+            <table id="usersTable" aria-label="Users Table">
+                <thead>
+                    <tr><th>Username</th><th>Name</th><th>Role</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+            <div id="userFormContainer" class="form-container" style="display:none;">
+                <h3>Add/Edit User</h3>
+                <form id="userForm">
+                    <label for="user_username">Username</label>
+                    <input type="text" id="user_username" name="username" required />
+                    <label for="user_password">Password</label>
+                    <input type="password" id="user_password" name="password" required />
+                    <label for="user_name">Full Name</label>
+                    <input type="text" id="user_name" name="name" required />
+                    <label for="user_role">Role</label>
+                    <select id="user_role" name="role" required>
+                        <option value="admin">Admin</option>
+                        <option value="sales">Sales</option>
+                        <option value="operations">Operations</option>
+                        <option value="tour_guide">Tour Guide</option>
+                        <option value="transfer">Transfer</option>
+                        <option value="accounting">Accounting</option>
+                    </select>
+                    <button type="submit">Save User</button>
+                    <button type="button" class="cancel">Cancel</button>
+                </form>
+            </div>
+        `,
+        manage_all_bookings: `
+            <h2>All Bookings Overview</h2>
+            <table id="allBookingsTable" aria-label="All Bookings Table">
+                <thead>
+                    <tr><th>Booking ID</th><th>Service</th><th>Date</th><th>Status</th><th>Guide</th><th>Transfer</th><th>Amount</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        `,
+        system_reports: `
+            <h2>System-Wide Reports</h2>
+            <p>Generate comprehensive reports for all aspects of the CRM.</p>
+            <ul>
+                <li><a href="#" download="system_performance.pdf">System Performance Report</a></li>
+                <li><a href="#" download="user_activity.pdf">User Activity Log</a></li>
+                <li><a href="#" download="revenue_analysis.pdf">Overall Revenue Analysis</a></li>
+            </ul>
+        `,
+
+        // --- SALES ---
+        sales_dashboard: () => `
+            <div class="welcome-message">
+                <p>Welcome, <strong>${loggedInUser.name}</strong>! Here's your Sales Overview.</p>
+            </div>
+            <h2>Sales Dashboard Summary</h2>
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-handshake"></i></div>
+                    <h3>My Active Leads</h3>
+                    <p>${leadsData.filter(lead => lead.salesAgent === loggedInUser.name && lead.status !== 'Converted' && lead.status !== 'Lost').length}</p>
+                </div>
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-calendar-check"></i></div>
+                    <h3>My Confirmed Bookings</h3>
+                    <p>${bookingsData.filter(booking => booking.salesAgent === loggedInUser.name && booking.status === 'Confirmed').length}</p>
+                </div>
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-percent"></i></div>
+                    <h3>Conversion Rate</h3>
+                    <p>${(leadsData.filter(lead => lead.salesAgent === loggedInUser.name && lead.status === 'Converted').length / leadsData.filter(lead => lead.salesAgent === loggedInUser.name).length * 100 || 0).toFixed(1)}%</p>
+                </div>
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-dollar-sign"></i></div>
+                    <h3>Total Sales Value</h3>
+                    <p>$${bookingsData.filter(booking => booking.salesAgent === loggedInUser.name && booking.status === 'Confirmed').reduce((sum, b) => sum + b.amount, 0).toFixed(2)}</p>
+                </div>
+            </div>
+            <h3>Quick Actions</h3>
+            <ul>
+                <li><a href="#" onclick="loadSection('leads'); return false;">Manage My Leads</a></li>
+                <li><a href="#" onclick="loadSection('sales_bookings'); return false;">View My Bookings</a></li>
+            </ul>
+        `,
+        leads: `
+            <h2>Leads Management</h2>
+            <button id="addLeadBtn" class="action-btn add-btn">+ Add New Lead</button>
+            <table id="leadsTable" aria-label="Leads Table">
+                <thead>
+                    <tr><th>Lead ID</th><th>Client Name</th><th>Service</th><th>Status</th><th>Contact</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+            <div id="leadFormContainer" class="form-container" style="display:none;">
+                <h3>Add/Edit Lead</h3>
+                <form id="leadForm">
+                    <label for="lead_client_name">Client Name</label>
+                    <input type="text" id="lead_client_name" name="clientName" required />
+                    <label for="lead_service">Service Interested In</label>
+                    <input type="text" id="lead_service" name="service" required />
+                    <label for="lead_contact">Contact Email/Phone</label>
+                    <input type="text" id="lead_contact" name="contact" required />
+                    <label for="lead_status">Status</label>
+                    <select id="lead_status" name="status" required>
+                        <option value="New">New</option>
+                        <option value="Contacted">Contacted</option>
+                        <option value="Proposal Sent">Proposal Sent</option>
+                        <option value="Negotiation">Negotiation</option>
+                        <option value="Converted">Converted (Closed Won)</option>
+                        <option value="Lost">Lost (Closed Lost)</option>
+                    </select>
+                    <button type="submit">Save Lead</button>
+                    <button type="button" class="cancel">Cancel</button>
+                </form>
+            </div>
+        `,
+        sales_bookings: `
+            <h2>My Bookings</h2>
+            <table id="salesBookingsTable" aria-label="Sales Bookings Table">
+                <thead>
+                    <tr><th>Booking ID</th><th>Client</th><th>Service</th><th>Date</th><th>Status</th><th>Amount</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        `,
+        sales_reports: `
+            <h2>Sales Performance Reports</h2>
+            <p>Access reports specific to your sales activities.</p>
+            <ul>
+                <li><a href="#" download="my_lead_conversion.pdf">My Lead Conversion Report</a></li>
+                <li><a href="#" download="my_monthly_sales.pdf">My Monthly Sales Report</a></li>
+            </ul>
+        `,
+
+        // --- OPERATIONS ---
+        operations_dashboard: () => `
+            <div class="welcome-message">
+                <p>Welcome, <strong>${loggedInUser.name}</strong>! This is your Operations Overview.</p>
+            </div>
+            <h2>Operations Dashboard Summary</h2>
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-calendar-alt"></i></div>
+                    <h3>Upcoming Bookings (7 days)</h3>
+                    <p>${bookingsData.filter(b => {
+                        const bookingDate = new Date(b.date);
+                        const now = new Date();
+                        const sevenDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+                        return bookingDate >= now && bookingDate <= sevenDaysLater && b.status !== 'Cancelled';
+                    }).length}</p>
+                </div>
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-person-hiking"></i></div>
+                    <h3>Available Guides</h3>
+                    <p>${tourGuidesData.filter(g => g.status === 'Active').length}</p>
+                </div>
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-car"></i></div>
+                    <h3>Available Vehicles</h3>
+                    <p>${vehiclesData.filter(v => v.status === 'Available').length}</p>
+                </div>
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <h3>Pending Assignments</h3>
+                    <p>${bookingsData.filter(b => b.status === 'Confirmed' && (!b.assignedGuide || !b.assignedTransfer)).length}</p>
+                </div>
+            </div>
+            <h3>Quick Actions</h3>
+            <ul>
+                <li><a href="#" onclick="loadSection('manage_bookings'); return false;">Manage All Bookings</a></li>
+                <li><a href="#" onclick="loadSection('manage_guides'); return false;">Manage Tour Guides</a></li>
+            </ul>
+        `,
+        manage_bookings: `
+            <h2>Manage Bookings</h2>
+            <table id="opsBookingsTable" aria-label="Operations Bookings Table">
+                <thead>
+                    <tr><th>Booking ID</th><th>Client</th><th>Service</th><th>Date</th><th>Status</th><th>Guide</th><th>Transfer</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+            <div id="opsBookingFormContainer" class="form-container" style="display:none;">
+                <h3>Edit Booking Details</h3>
+                <form id="opsBookingForm">
+                    <label for="ops_booking_id">Booking ID</label>
+                    <input type="text" id="ops_booking_id" name="bookingId" readonly />
+                    <label for="ops_client_name">Client Name</label>
+                    <input type="text" id="ops_client_name" name="clientName" readonly />
+                    <label for="ops_service">Service</label>
+                    <input type="text" id="ops_service" name="service" readonly />
+                    <label for="ops_date">Date</label>
+                    <input type="date" id="ops_date" name="date" required />
+                    <label for="ops_status">Status</label>
+                    <select id="ops_status" name="status" required>
+                        <option value="Confirmed">Confirmed</option>
+                        <option value="Pending Guide">Pending Guide</option>
+                        <option value="Pending Transfer">Pending Transfer</option>
+                        <option value="Assigned">Assigned (Guide & Transfer)</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                    <label for="ops_assigned_guide">Assign Tour Guide</label>
+                    <select id="ops_assigned_guide" name="assignedGuide">
+                        <option value="">-- Select Guide --</option>
+                        </select>
+                    <label for="ops_assigned_transfer">Assign Transfer</label>
+                    <select id="ops_assigned_transfer" name="assignedTransfer">
+                        <option value="">-- Select Transfer --</option>
+                        </select>
+                    <button type="submit">Update Booking</button>
+                    <button type="button" class="cancel">Cancel</button>
+                </form>
+            </div>
+        `,
+        manage_guides: `
+            <h2>Manage Tour Guides</h2>
+            <button id="addGuideBtn" class="action-btn add-btn">+ Add New Guide</button>
+            <table id="guidesTable" aria-label="Tour Guides Table">
+                <thead>
+                    <tr><th>Name</th><th>Specialization</th><th>Phone</th><th>Status</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+            <div id="guideFormContainer" class="form-container" style="display:none;">
+                <h3>Add/Edit Tour Guide</h3>
+                <form id="guideForm">
+                    <label for="guide_name">Guide Name</label>
+                    <input type="text" id="guide_name" name="name" required />
+                    <label for="guide_specialization">Specialization</label>
+                    <input type="text" id="guide_specialization" name="specialization" placeholder="e.g., Desert, City, History" required />
+                    <label for="guide_phone">Phone Number</label>
+                    <input type="tel" id="guide_phone" name="phone" required />
+                    <label for="guide_status">Status</label>
+                    <select id="guide_status" name="status" required>
+                        <option value="Active">Active</option>
+                        <option value="On Leave">On Leave</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                    <button type="submit">Save Guide</button>
+                    <button type="button" class="cancel">Cancel</button>
+                </form>
+            </div>
+        `,
+        manage_vehicles: `
+            <h2>Manage Vehicles</h2>
+            <button id="addVehicleBtn" class="action-btn add-btn">+ Add New Vehicle</button>
+            <table id="vehiclesTable" aria-label="Vehicles Table">
+                <thead>
+                    <tr><th>Plate No.</th><th>Type</th><th>Capacity</th><th>Driver</th><th>Status</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+            <div id="vehicleFormContainer" class="form-container" style="display:none;">
+                <h3>Add/Edit Vehicle</h3>
+                <form id="vehicleForm">
+                    <label for="vehicle_plate">Plate Number</label>
+                    <input type="text" id="vehicle_plate" name="plate" required />
+                    <label for="vehicle_type">Type</label>
+                    <input type="text" id="vehicle_type" name="type" placeholder="e.g., SUV, Van, Bus" required />
+                    <label for="vehicle_capacity">Capacity</label>
+                    <input type="number" id="vehicle_capacity" name="capacity" min="1" required />
+                    <label for="vehicle_driver">Assigned Driver</label>
+                    <input type="text" id="vehicle_driver" name="driver" placeholder="e.g., Fahad Driver" />
+                    <label for="vehicle_status">Status</label>
+                    <select id="vehicle_status" name="status" required>
+                        <option value="Available">Available</option>
+                        <option value="Booked">Booked</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="Out of Service">Out of Service</option>
+                    </select>
+                    <button type="submit">Save Vehicle</button>
+                    <button type="button" class="cancel">Cancel</button>
+                </form>
+            </div>
+        `,
+        operational_reports: `
+            <h2>Operational Reports</h2>
+            <p>Generate reports on booking assignments, guide utilization, and vehicle availability.</p>
+            <ul>
+                <li><a href="#" download="booking_assignment_report.pdf">Booking Assignment Report</a></li>
+                <li><a href="#" download="guide_utilization.pdf">Tour Guide Utilization</a></li>
+                <li><a href="#" download="vehicle_availability.pdf">Vehicle Availability Report</a></li>
+            </ul>
+        `,
+
+        // --- TOUR GUIDE ---
+        guide_dashboard: () => `
+            <div class="welcome-message">
+                <p>Hello, <strong>${loggedInUser.name}</strong>! Here is your upcoming tour schedule.</p>
+            </div>
+            <h2>My Upcoming Tours</h2>
+            <table id="guideScheduleTable" aria-label="Tour Guide Schedule Table">
+                <thead>
+                    <tr><th>Booking ID</th><th>Service</th><th>Date</th><th>Client</th><th>Status</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+            <div id="tourDetailsView" class="details-view" style="display:none;">
+                <button class="action-btn back-to-schedule" onclick="loadSection('guide_dashboard')">← Back to Schedule</button>
+                <h3>Tour Details: <span id="tour_detail_id"></span></h3>
+                <p><strong>Service:</strong> <span id="tour_detail_service"></span></p>
+                <p><strong>Date:</strong> <span id="tour_detail_date"></span></p>
+                <p><strong>Client Name:</strong> <span id="tour_detail_client"></span></p>
+                <p><strong>Contact:</strong> <span id="tour_detail_contact"></span></p>
+                <p><strong>Status:</strong> <span id="tour_detail_status"></span></p>
+                <button class="action-btn" id="markTourCompletedBtn">Mark as Completed</button>
+            </div>
+        `,
+        guide_past_tours: () => `
+            <h2>My Past Tours</h2>
+            <table id="guidePastToursTable" aria-label="Tour Guide Past Tours Table">
+                <thead>
+                    <tr><th>Booking ID</th><th>Service</th><th>Date</th><th>Client</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        `,
+
+        // --- TRANSFER ---
+        transfer_dashboard: () => `
+            <div class="welcome-message">
+                <p>Hello, <strong>${loggedInUser.name}</strong>! Here is your upcoming transfer schedule.</p>
+            </div>
+            <h2>My Upcoming Transfers</h2>
+            <table id="transferScheduleTable" aria-label="Transfer Schedule Table">
+                <thead>
+                    <tr><th>Booking ID</th><th>Service</th><th>Date</th><th>Client</th><th>Vehicle</th><th>Status</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+            <div id="transferDetailsView" class="details-view" style="display:none;">
+                <button class="action-btn back-to-schedule" onclick="loadSection('transfer_dashboard')">← Back to Schedule</button>
+                <h3>Transfer Details: <span id="transfer_detail_id"></span></h3>
+                <p><strong>Service:</strong> <span id="transfer_detail_service"></span></p>
+                <p><strong>Date:</strong> <span id="transfer_detail_date"></span></p>
+                <p><strong>Client Name:</strong> <span id="transfer_detail_client"></span></p>
+                <p><strong>Contact:</strong> <span id="transfer_detail_contact"></span></p>
+                <p><strong>Assigned Vehicle:</strong> <span id="transfer_detail_vehicle"></span></p>
+                <p><strong>Status:</strong> <span id="transfer_detail_status"></span></p>
+                <button class="action-btn" id="markTransferCompletedBtn">Mark as Completed</button>
+            </div>
+        `,
+        transfer_history: () => `
+            <h2>My Transfer History</h2>
+            <table id="transferHistoryTable" aria-label="Transfer History Table">
+                <thead>
+                    <tr><th>Booking ID</th><th>Service</th><th>Date</th><th>Client</th><th>Vehicle</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        `,
+
+        // --- ACCOUNTING ---
+        accounting_dashboard: () => `
+            <div class="welcome-message">
+                <p>Welcome, <strong>${loggedInUser.name}</strong>! Here's your Accounting Overview.</p>
+            </div>
+            <h2>Accounting Dashboard Summary</h2>
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-dollar-sign"></i></div>
+                    <h3>Total Income</h3>
+                    <p>$${transactionsData.filter(t => t.type === 'Income').reduce((sum, t) => sum + t.amount, 0).toFixed(2)}</p>
+                </div>
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-minus-circle"></i></div>
+                    <h3>Total Expenses</h3>
+                    <p>$${transactionsData.filter(t => t.type === 'Expense').reduce((sum, t) => sum + t.amount, 0).toFixed(2)}</p>
+                </div>
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-money-check-alt"></i></div>
+                    <h3>Pending Payments</h3>
+                    <p>${transactionsData.filter(t => t.status === 'Pending' || t.status === 'Overdue').length}</p>
+                </div>
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-balance-scale"></i></div>
+                    <h3>Net Profit</h3>
+                    <p>$${(transactionsData.filter(t => t.type === 'Income').reduce((sum, t) => sum + t.amount, 0) - transactionsData.filter(t => t.type === 'Expense').reduce((sum, t) => sum + t.amount, 0)).toFixed(2)}</p>
+                </div>
+            </div>
+            <h3>Quick Actions</h3>
+            <ul>
+                <li><a href="#" onclick="loadSection('transactions'); return false;">Manage Transactions</a></li>
+                <li><a href="#" onclick="loadSection('invoices'); return false;">Generate Invoices</a></li>
+            </ul>
+        `,
+        transactions: `
+            <h2>Transactions</h2>
+            <button id="addTransactionBtn" class="action-btn add-btn">+ Add New Transaction</button>
+            <table id="transactionsTable" aria-label="Transactions Table">
+                <thead>
+                    <tr><th>TRX ID</th><th>Booking ID</th><th>Type</th><th>Description</th><th>Amount</th><th>Date</th><th>Status</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+            <div id="transactionFormContainer" class="form-container" style="display:none;">
+                <h3>Add/Edit Transaction</h3>
+                <form id="transactionForm">
+                    <label for="trx_booking_id">Booking ID (Optional)</label>
+                    <input type="text" id="trx_booking_id" name="bookingId" placeholder="e.g., B001" />
+                    <label for="trx_type">Type</label>
+                    <select id="trx_type" name="type" required>
+                        <option value="Income">Income</option>
+                        <option value="Expense">Expense</option>
+                    </select>
+                    <label for="trx_description">Description</label>
+                    <input type="text" id="trx_description" name="description" required />
+                    <label for="trx_amount">Amount</label>
+                    <input type="number" id="trx_amount" name="amount" step="0.01" required />
+                    <label for="trx_date">Date</label>
+                    <input type="date" id="trx_date" name="date" required />
+                    <label for="trx_status">Status</label>
+                    <select id="trx_status" name="status" required>
+                        <option value="Paid">Paid</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Overdue">Overdue</option>
+                    </select>
+                    <button type="submit">Save Transaction</button>
+                    <button type="button" class="cancel">Cancel</button>
+                </form>
+            </div>
+        `,
+        invoices: `
+            <h2>Invoices</h2>
+            <p>Generate and manage client invoices.</p>
+            <button class="action-btn add-btn">Generate New Invoice</button>
+            <table id="invoicesTable" aria-label="Invoices Table">
+                <thead>
+                    <tr><th>Invoice ID</th><th>Booking ID</th><th>Client</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>INV001</td><td>B001</td><td>Ahmed Khalid</td><td>$350.00</td><td>2025-06-05</td><td><span style="color: green;">Paid</span></td><td><button class="action-btn view">View</button> <button class="action-btn">Send</button></td></tr>
+                    <tr><td>INV002</td><td>B002</td><td>Fatima Ali</td><td>$200.00</td><td>2025-06-12</td><td><span style="color: orange;">Pending</span></td><td><button class="action-btn view">View</button> <button class="action-btn">Send</button></td></tr>
+                </tbody>
+            </table>
+        `,
+        financial_reports: `
+            <h2>Financial Reports</h2>
+            <p>Comprehensive financial reporting tools.</p>
+            <ul>
+                <li><a href="#" download="income_statement.pdf">Income Statement</a></li>
+                <li><a href="#" download="cash_flow.pdf">Cash Flow Report</a></li>
+                <li><a href="#" download="revenue_by_service.pdf">Revenue by Service Type</a></li>
+            </ul>
+        `,
+    };
+
+    // --- Main App Logic ---
+
+    // Function to handle login
+    loginBtn.addEventListener('click', () => {
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value.trim();
+
+        if (users[username] && users[username].password === password) {
+            loggedInUser = users[username];
+            loginPage.style.display = 'none';
+            appContainer.style.display = 'flex';
+            renderSidebar(loggedInUser.role);
+            loadSection(loggedInUser.role + '_dashboard'); // Load role-specific dashboard
+            loginError.textContent = ''; // Clear any previous errors
+        } else {
+            loginError.textContent = 'Invalid username or password.';
+        }
+    });
+
+    // Function to handle logout
+    logoutBtn.addEventListener('click', () => {
+        loggedInUser = null;
+        appContainer.style.display = 'none';
+        loginPage.style.display = 'flex';
+        usernameInput.value = '';
+        passwordInput.value = '';
+        sidebar.innerHTML = ''; // Clear sidebar
+        mainContent.innerHTML = ''; // Clear main content
+    });
+
+    // Function to render sidebar based on role
+    function renderSidebar(role) {
+        sidebar.innerHTML = ''; // Clear existing buttons
+        const navItems = roleSidebars[role];
+        if (navItems) {
+            navItems.forEach(item => {
+                const button = document.createElement('button');
+                button.dataset.section = item.section;
+                button.setAttribute('aria-label', item.tooltip);
+                button.innerHTML = `<i class="${item.icon}"></i><span class="tooltip">${item.tooltip}</span>`;
+                button.onclick = () => loadSection(item.section);
+                sidebar.appendChild(button);
+            });
+        }
+        // Always add logout button
+        const logoutButtonClone = logoutBtn.cloneNode(true);
+        logoutButtonClone.onclick = () => logoutBtn.click(); // Attach actual logout logic
+        sidebar.appendChild(logoutButtonClone);
+    }
+
+    // Function to load a section's content and initialize its logic
+    function loadSection(sectionName) {
+        // Clear main content area
+        mainContent.innerHTML = '';
+
+        // Update active state in sidebar
+        sidebar.querySelectorAll('button').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.section === sectionName);
+        });
+
+        // Load content based on sectionName
+        const contentHtmlOrFn = pageContent[sectionName];
+        if (contentHtmlOrFn) {
+            mainContent.innerHTML = typeof contentHtmlOrFn === 'function' ? contentHtmlOrFn() : contentHtmlOrFn;
+
+            // Initialize section-specific logic
+            switch (sectionName) {
+                case 'manage_users': initManageUsers(); break;
+                case 'manage_all_bookings': initAllBookingsTable(); break;
+                case 'leads': initLeads(); break;
+                case 'sales_bookings': initSalesBookings(); break;
+                case 'manage_bookings': initOperationsBookings(); break;
+                case 'manage_guides': initManageGuides(); break;
+                case 'manage_vehicles': initManageVehicles(); break;
+                case 'guide_dashboard': initGuideSchedule(); break;
+                case 'guide_past_tours': initGuidePastTours(); break;
+                case 'transfer_dashboard': initTransferSchedule(); break;
+                case 'transfer_history': initTransferHistory(); break;
+                case 'transactions': initTransactions(); break;
+                // Add more cases for other sections that need JS initialization
+            }
+        } else {
+            mainContent.innerHTML = `<h2>Page Not Found</h2><p>The section "${sectionName}" could not be loaded.</p>`;
+        }
+    }
+
+    // --- Section-Specific Initialization Functions ---
+
+    // Admin Users
+    function initManageUsers() {
+        const addBtn = document.getElementById('addAdminUserBtn');
+        const formContainer = document.getElementById('userFormContainer');
+        const form = document.getElementById('userForm');
+        const tbody = document.querySelector('#usersTable tbody');
+        let editUsername = null;
+
+        function renderUsers() {
+            tbody.innerHTML = '';
+            for (const username in users) {
+                const user = users[username];
+                const tr = document.createElement('tr');
+                tr.dataset.username = username;
+                tr.innerHTML = `
+                    <td>${username}</td>
+                    <td>${user.name}</td>
+                    <td>${user.role.replace('_', ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</td>
+                    <td>
+                        <button class="action-btn edit">Edit</button>
+                        ${username !== loggedInUser.username ? '<button class="action-btn delete">Delete</button>' : ''}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+                addUserRowListeners(tr);
+            }
+        }
+
+        function addUserRowListeners(tr) {
+            tr.querySelector('.edit').onclick = () => {
+                formContainer.style.display = 'block';
+                editUsername = tr.dataset.username;
+                const user = users[editUsername];
+                form.user_username.value = editUsername;
+                form.user_username.readOnly = true; // Prevent changing username for existing user
+                form.user_password.value = user.password; // Pre-fill password (in real app, wouldn't do this for security)
+                form.user_name.value = user.name;
+                form.user_role.value = user.role;
+                form.querySelector('button[type="submit"]').textContent = 'Update User';
+            };
+            const deleteBtn = tr.querySelector('.delete');
+            if (deleteBtn) {
+                deleteBtn.onclick = () => {
+                    if (confirm(`Are you sure you want to delete user "${tr.dataset.username}"?`)) {
+                        delete users[tr.dataset.username];
+                        renderUsers();
+                        if (editUsername === tr.dataset.username) {
+                            formContainer.style.display = 'none';
+                            editUsername = null;
+                        }
+                    }
+                };
+            }
+        }
+
+        addBtn.onclick = () => {
+            formContainer.style.display = 'block';
+            form.reset();
+            form.user_username.readOnly = false;
+            editUsername = null;
+            form.querySelector('button[type="submit"]').textContent = 'Save User';
+        };
+
+        form.querySelector('.cancel').onclick = () => {
+            formContainer.style.display = 'none';
+            editUsername = null;
+        };
+
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            const username = form.user_username.value.trim();
+            const password = form.user_password.value;
+            const name = form.user_name.value.trim();
+            const role = form.user_role.value;
+
+            if (editUsername) {
+                // Update existing user
+                users[editUsername] = { password, role, name };
+            } else {
+                // Add new user
+                if (users[username]) {
+                    alert('Username already exists. Please choose a different username.');
+                    return;
+                }
+                users[username] = { password, role, name };
+            }
+            formContainer.style.display = 'none';
+            editUsername = null;
+            renderUsers();
+        };
+
+        renderUsers(); // Initial render
+    }
+
+    // Admin All Bookings
+    function initAllBookingsTable() {
+        const tbody = document.querySelector('#allBookingsTable tbody');
+
+        function renderAllBookings() {
+            tbody.innerHTML = '';
+            bookingsData.forEach(booking => {
+                const tr = document.createElement('tr');
+                // Find client name for display
+                const lead = leadsData.find(l => l.id === booking.leadId);
+                const clientName = lead ? lead.clientName : 'N/A';
+
+                tr.innerHTML = `
+                    <td>${booking.id}</td>
+                    <td>${booking.service}</td>
+                    <td>${booking.date}</td>
+                    <td><span style="color: ${getStatusColor(booking.status)};">${booking.status}</span></td>
+                    <td>${booking.assignedGuide || 'Unassigned'}</td>
+                    <td>${booking.assignedTransfer || 'Unassigned'}</td>
+                    <td>$${booking.amount.toFixed(2)}</td>
+                    <td>
+                        <button class="action-btn view">View Details</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+                tr.querySelector('.view').onclick = () => alert('View details for booking ' + booking.id); // Simple alert for demo
+            });
+        }
+        renderAllBookings();
+    }
+
+
+    // Sales Leads
+    function initLeads() {
+        const addBtn = document.getElementById('addLeadBtn');
+        const formContainer = document.getElementById('leadFormContainer');
+        const form = document.getElementById('leadForm');
+        const tbody = document.querySelector('#leadsTable tbody');
+        let editLeadId = null;
+
+        function renderLeads() {
+            tbody.innerHTML = '';
+            leadsData.filter(lead => lead.salesAgent === loggedInUser.name).forEach(lead => {
+                const tr = document.createElement('tr');
+                tr.dataset.leadId = lead.id;
+                tr.innerHTML = `
+                    <td>${lead.id}</td>
+                    <td>${lead.clientName}</td>
+                    <td>${lead.service}</td>
+                    <td><span style="color: ${getStatusColor(lead.status)};">${lead.status}</span></td>
+                    <td>${lead.contact}</td>
+                    <td>
+                        <button class="action-btn edit">Edit</button>
+                        <button class="action-btn delete">Delete</button>
+                        ${lead.status === 'Negotiation' || lead.status === 'Proposal Sent' ? '<button class="action-btn add-btn convert">Convert</button>' : ''}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+                addLeadRowListeners(tr);
+            });
+        }
+
+        function addLeadRowListeners(tr) {
+            tr.querySelector('.edit').onclick = () => {
+                formContainer.style.display = 'block';
+                editLeadId = tr.dataset.leadId;
+                const lead = leadsData.find(l => l.id === editLeadId);
+                form.lead_client_name.value = lead.clientName;
+                form.lead_service.value = lead.service;
+                form.lead_contact.value = lead.contact;
+                form.lead_status.value = lead.status;
+                form.querySelector('button[type="submit"]').textContent = 'Update Lead';
+            };
+            tr.querySelector('.delete').onclick = () => {
+                if (confirm(`Are you sure you want to delete lead ${tr.dataset.leadId}?`)) {
+                    leadsData = leadsData.filter(l => l.id !== tr.dataset.leadId);
+                    renderLeads();
+                    if (editLeadId === tr.dataset.leadId) {
+                        formContainer.style.display = 'none';
+                        editLeadId = null;
+                    }
+                }
+            };
+            const convertBtn = tr.querySelector('.convert');
+            if (convertBtn) {
+                convertBtn.onclick = () => {
+                    if (confirm(`Convert lead ${tr.dataset.leadId} to a booking?`)) {
+                        const lead = leadsData.find(l => l.id === tr.dataset.leadId);
+                        if (lead) {
+                            const newBookingId = generateUniqueId('B');
+                            bookingsData.push({
+                                id: newBookingId,
+                                leadId: lead.id,
+                                service: lead.service,
+                                date: '', // To be filled by Operations or follow-up
+                                status: 'Pending Guide', // Initial status
+                                assignedGuide: '',
+                                assignedTransfer: '',
+                                amount: Math.floor(Math.random() * 500) + 100, // Random amount for demo
+                                salesAgent: loggedInUser.name // Assign sales agent
+                            });
+                            lead.status = 'Converted';
+                            alert(`Lead ${lead.id} converted to Booking ${newBookingId}!`);
+                            renderLeads();
+                        }
+                    }
+                };
+            }
+        }
+
+        addBtn.onclick = () => {
+            formContainer.style.display = 'block';
+            form.reset();
+            editLeadId = null;
+            form.querySelector('button[type="submit"]').textContent = 'Save Lead';
+        };
+
+        form.querySelector('.cancel').onclick = () => {
+            formContainer.style.display = 'none';
+            editLeadId = null;
+        };
+
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            const clientName = form.lead_client_name.value.trim();
+            const service = form.lead_service.value.trim();
+            const contact = form.lead_contact.value.trim();
+            const status = form.lead_status.value;
+
+            if (editLeadId) {
+                const leadToUpdate = leadsData.find(l => l.id === editLeadId);
+                if (leadToUpdate) {
+                    leadToUpdate.clientName = clientName;
+                    leadToUpdate.service = service;
+                    leadToUpdate.contact = contact;
+                    leadToUpdate.status = status;
+                }
+            } else {
+                const newLeadId = generateUniqueId('L');
+                leadsData.push({ id: newLeadId, clientName, service, status, contact, salesAgent: loggedInUser.name });
+            }
+            formContainer.style.display = 'none';
+            editLeadId = null;
+            renderLeads();
+        };
+
+        renderLeads();
+    }
+
+    // Sales Bookings (only view)
+    function initSalesBookings() {
+        const tbody = document.querySelector('#salesBookingsTable tbody');
+        function renderSalesBookings() {
+            tbody.innerHTML = '';
+            bookingsData.filter(booking => booking.salesAgent === loggedInUser.name).forEach(booking => {
+                const lead = leadsData.find(l => l.id === booking.leadId);
+                const clientName = lead ? lead.clientName : 'N/A';
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${booking.id}</td>
+                    <td>${clientName}</td>
+                    <td>${booking.service}</td>
+                    <td>${booking.date}</td>
+                    <td><span style="color: ${getStatusColor(booking.status)};">${booking.status}</span></td>
+                    <td>$${booking.amount.toFixed(2)}</td>
+                    <td>
+                        <button class="action-btn view">View</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+                tr.querySelector('.view').onclick = () => alert('View details for booking ' + booking.id);
+            });
+        }
+        renderSalesBookings();
+    }
+
+    // Operations Bookings
+    function initOperationsBookings() {
+        const tbody = document.querySelector('#opsBookingsTable tbody');
+        const formContainer = document.getElementById('opsBookingFormContainer');
+        const form = document.getElementById('opsBookingForm');
+        const guideSelect = document.getElementById('ops_assigned_guide');
+        const transferSelect = document.getElementById('ops_assigned_transfer');
+        let editBookingId = null;
+
+        function populateSelects() {
+            guideSelect.innerHTML = '<option value="">-- Select Guide --</option>';
+            tourGuidesData.filter(g => g.status === 'Active').forEach(guide => {
+                const option = document.createElement('option');
+                option.value = guide.name;
+                option.textContent = guide.name;
+                guideSelect.appendChild(option);
+            });
+
+            transferSelect.innerHTML = '<option value="">-- Select Transfer --</option>';
+            vehiclesData.filter(v => v.status === 'Available' && v.driver).forEach(vehicle => {
+                const option = document.createElement('option');
+                option.value = vehicle.driver;
+                option.textContent = `${vehicle.driver} (${vehicle.plate})`;
+                transferSelect.appendChild(option);
+            });
+        }
+
+        function renderOpsBookings() {
+            tbody.innerHTML = '';
+            bookingsData.forEach(booking => {
+                const lead = leadsData.find(l => l.id === booking.leadId);
+                const clientName = lead ? lead.clientName : 'N/A';
+                const tr = document.createElement('tr');
+                tr.dataset.bookingId = booking.id;
+                tr.innerHTML = `
+                    <td>${booking.id}</td>
+                    <td>${clientName}</td>
+                    <td>${booking.service}</td>
+                    <td>${booking.date || 'N/A'}</td>
+                    <td><span style="color: ${getStatusColor(booking.status)};">${booking.status}</span></td>
+                    <td>${booking.assignedGuide || 'Unassigned'}</td>
+                    <td>${booking.assignedTransfer || 'Unassigned'}</td>
+                    <td>
+                        <button class="action-btn edit">Edit</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+                addOpsBookingRowListeners(tr);
+            });
+        }
+
+        function addOpsBookingRowListeners(tr) {
+            tr.querySelector('.edit').onclick = () => {
+                formContainer.style.display = 'block';
+                editBookingId = tr.dataset.bookingId;
+                const booking = bookingsData.find(b => b.id === editBookingId);
+                const lead = leadsData.find(l => l.id === booking.leadId);
+
+                form.ops_booking_id.value = booking.id;
+                form.ops_client_name.value = lead ? lead.clientName : '';
+                form.ops_service.value = booking.service;
+                form.ops_date.value = booking.date;
+                form.ops_status.value = booking.status;
+                form.ops_assigned_guide.value = booking.assignedGuide || '';
+                form.ops_assigned_transfer.value = booking.assignedTransfer || '';
+            };
+        }
+
+        form.querySelector('.cancel').onclick = () => {
+            formContainer.style.display = 'none';
+            editBookingId = null;
+        };
+
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            const bookingToUpdate = bookingsData.find(b => b.id === editBookingId);
+            if (bookingToUpdate) {
+                bookingToUpdate.date = form.ops_date.value;
+                bookingToUpdate.status = form.ops_status.value;
+                bookingToUpdate.assignedGuide = form.ops_assigned_guide.value;
+                bookingToUpdate.assignedTransfer = form.ops_assigned_transfer.value;
+            }
+            formContainer.style.display = 'none';
+            editBookingId = null;
+            renderOpsBookings();
+        };
+
+        populateSelects();
+        renderOpsBookings();
+    }
+
+    // Operations Tour Guides
+    function initManageGuides() {
+        const addBtn = document.getElementById('addGuideBtn');
+        const formContainer = document.getElementById('guideFormContainer');
+        const form = document.getElementById('guideForm');
+        const tbody = document.querySelector('#guidesTable tbody');
+        let editGuideId = null;
+
+        function renderGuides() {
+            tbody.innerHTML = '';
+            tourGuidesData.forEach(guide => {
+                const tr = document.createElement('tr');
+                tr.dataset.guideId = guide.id;
+                tr.innerHTML = `
+                    <td>${guide.name}</td>
+                    <td>${guide.specialization}</td>
+                    <td>${guide.phone}</td>
+                    <td><span style="color: ${getStatusColor(guide.status)};">${guide.status}</span></td>
+                    <td>
+                        <button class="action-btn edit">Edit</button>
+                        <button class="action-btn delete">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+                addGuideRowListeners(tr);
+            });
+        }
+
+        function addGuideRowListeners(tr) {
+            tr.querySelector('.edit').onclick = () => {
+                formContainer.style.display = 'block';
+                editGuideId = tr.dataset.guideId;
+                const guide = tourGuidesData.find(g => g.id === editGuideId);
+                form.guide_name.value = guide.name;
+                form.guide_specialization.value = guide.specialization;
+                form.guide_phone.value = guide.phone;
+                form.guide_status.value = guide.status;
+                form.querySelector('button[type="submit"]').textContent = 'Update Guide';
+            };
+            tr.querySelector('.delete').onclick = () => {
+                if (confirm(`Are you sure you want to delete guide ${tr.dataset.guideId}?`)) {
+                    tourGuidesData = tourGuidesData.filter(g => g.id !== tr.dataset.guideId);
+                    renderGuides();
+                    if (editGuideId === tr.dataset.guideId) {
+                        formContainer.style.display = 'none';
+                        editGuideId = null;
+                    }
+                }
+            };
+        }
+
+        addBtn.onclick = () => {
+            formContainer.style.display = 'block';
+            form.reset();
+            editGuideId = null;
+            form.querySelector('button[type="submit"]').textContent = 'Save Guide';
+        };
+
+        form.querySelector('.cancel').onclick = () => {
+            formContainer.style.display = 'none';
+            editGuideId = null;
+        };
+
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            const name = form.guide_name.value.trim();
+            const specialization = form.guide_specialization.value.trim();
+            const phone = form.guide_phone.value.trim();
+            const status = form.guide_status.value;
+
+            if (editGuideId) {
+                const guideToUpdate = tourGuidesData.find(g => g.id === editGuideId);
+                if (guideToUpdate) {
+                    guideToUpdate.name = name;
+                    guideToUpdate.specialization = specialization;
+                    guideToUpdate.phone = phone;
+                    guideToUpdate.status = status;
+                }
+            } else {
+                const newGuideId = generateUniqueId('TG');
+                tourGuidesData.push({ id: newGuideId, name, specialization, phone, status });
+            }
+            formContainer.style.display = 'none';
+            editGuideId = null;
+            renderGuides();
+        };
+
+        renderGuides();
+    }
+
+    // Operations Vehicles
+    function initManageVehicles() {
+        const addBtn = document.getElementById('addVehicleBtn');
+        const formContainer = document.getElementById('vehicleFormContainer');
+        const form = document.getElementById('vehicleForm');
+        const tbody = document.querySelector('#vehiclesTable tbody');
+        let editVehicleId = null;
+
+        function renderVehicles() {
+            tbody.innerHTML = '';
+            vehiclesData.forEach(vehicle => {
+                const tr = document.createElement('tr');
+                tr.dataset.vehicleId = vehicle.id;
+                tr.innerHTML = `
+                    <td>${vehicle.plate}</td>
+                    <td>${vehicle.type}</td>
+                    <td>${vehicle.capacity}</td>
+                    <td>${vehicle.driver || 'Unassigned'}</td>
+                    <td><span style="color: ${getStatusColor(vehicle.status)};">${vehicle.status}</span></td>
+                    <td>
+                        <button class="action-btn edit">Edit</button>
+                        <button class="action-btn delete">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+                addVehicleRowListeners(tr);
+            });
+        }
+
+        function addVehicleRowListeners(tr) {
+            tr.querySelector('.edit').onclick = () => {
+                formContainer.style.display = 'block';
+                editVehicleId = tr.dataset.vehicleId;
+                const vehicle = vehiclesData.find(v => v.id === editVehicleId);
+                form.vehicle_plate.value = vehicle.plate;
+                form.vehicle_type.value = vehicle.type;
+                form.vehicle_capacity.value = vehicle.capacity;
+                form.vehicle_driver.value = vehicle.driver;
+                form.vehicle_status.value = vehicle.status;
+                form.querySelector('button[type="submit"]').textContent = 'Update Vehicle';
+            };
+            tr.querySelector('.delete').onclick = () => {
+                if (confirm(`Are you sure you want to delete vehicle ${tr.dataset.vehicleId}?`)) {
+                    vehiclesData = vehiclesData.filter(v => v.id !== tr.dataset.vehicleId);
+                    renderVehicles();
+                    if (editVehicleId === tr.dataset.vehicleId) {
+                        formContainer.style.display = 'none';
+                        editVehicleId = null;
+                    }
+                }
+            };
+        }
+
+        addBtn.onclick = () => {
+            formContainer.style.display = 'block';
+            form.reset();
+            editVehicleId = null;
+            form.querySelector('button[type="submit"]').textContent = 'Save Vehicle';
+        };
+
+        form.querySelector('.cancel').onclick = () => {
+            formContainer.style.display = 'none';
+            editVehicleId = null;
+        };
+
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            const plate = form.vehicle_plate.value.trim();
+            const type = form.vehicle_type.value.trim();
+            const capacity = parseInt(form.vehicle_capacity.value);
+            const driver = form.vehicle_driver.value.trim();
+            const status = form.vehicle_status.value;
+
+            if (editVehicleId) {
+                const vehicleToUpdate = vehiclesData.find(v => v.id === editVehicleId);
+                if (vehicleToUpdate) {
+                    vehicleToUpdate.plate = plate;
+                    vehicleToUpdate.type = type;
+                    vehicleToUpdate.capacity = capacity;
+                    vehicleToUpdate.driver = driver;
+                    vehicleToUpdate.status = status;
+                }
+            } else {
+                const newVehicleId = generateUniqueId('V');
+                vehiclesData.push({ id: newVehicleId, plate, type, capacity, driver, status });
+            }
+            formContainer.style.display = 'none';
+            editVehicleId = null;
+            renderVehicles();
+        };
+
+        renderVehicles();
+    }
+
+
+    // Tour Guide Schedule
+    function initGuideSchedule() {
+        const tbody = document.querySelector('#guideScheduleTable tbody');
+        const tourDetailsView = document.getElementById('tourDetailsView');
+        const markTourCompletedBtn = document.getElementById('markTourCompletedBtn');
+        let currentViewedBookingId = null;
+
+        function renderGuideBookings() {
+            tbody.innerHTML = '';
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Normalize to start of day
+
+            const upcomingBookings = bookingsData.filter(booking =>
+                booking.assignedGuide === loggedInUser.name &&
+                booking.status !== 'Completed' && booking.status !== 'Cancelled' &&
+                new Date(booking.date) >= today
+            ).sort((a, b) => new Date(a.date) - new Date(b.date)); // Sort by date
+
+            if (upcomingBookings.length === 0) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="6" style="text-align: center;">No upcoming tours assigned.</td>`;
+                tbody.appendChild(tr);
+            } else {
+                upcomingBookings.forEach(booking => {
+                    const lead = leadsData.find(l => l.id === booking.leadId);
+                    const clientName = lead ? lead.clientName : 'N/A';
+                    const tr = document.createElement('tr');
+                    tr.dataset.bookingId = booking.id;
+                    tr.innerHTML = `
+                        <td>${booking.id}</td>
+                        <td>${booking.service}</td>
+                        <td>${booking.date}</td>
+                        <td>${clientName}</td>
+                        <td><span style="color: ${getStatusColor(booking.status)};">${booking.status}</span></td>
+                        <td>
+                            <button class="action-btn view">View Details</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                    tr.querySelector('.view').onclick = () => showTourDetails(booking.id);
+                });
+            }
+            tourDetailsView.style.display = 'none'; // Hide details view when re-rendering table
+        }
+
+        function showTourDetails(bookingId) {
+            const booking = bookingsData.find(b => b.id === bookingId);
+            if (!booking) return;
+
+            const lead = leadsData.find(l => l.id === booking.leadId);
+
+            document.getElementById('guideScheduleTable').style.display = 'none';
+            tourDetailsView.style.display = 'block';
+
+            document.getElementById('tour_detail_id').textContent = booking.id;
+            document.getElementById('tour_detail_service').textContent = booking.service;
+            document.getElementById('tour_detail_date').textContent = booking.date;
+            document.getElementById('tour_detail_client').textContent = lead ? lead.clientName : 'N/A';
+            document.getElementById('tour_detail_contact').textContent = lead ? lead.contact : 'N/A';
+            document.getElementById('tour_detail_status').innerHTML = `<span style="color: ${getStatusColor(booking.status)};">${booking.status}</span>`;
+
+            markTourCompletedBtn.style.display = (booking.status !== 'Completed' && booking.status !== 'Cancelled') ? 'inline-block' : 'none';
+            currentViewedBookingId = bookingId;
+        }
+
+        markTourCompletedBtn.onclick = () => {
+            if (currentViewedBookingId && confirm(`Mark tour ${currentViewedBookingId} as completed?`)) {
+                const booking = bookingsData.find(b => b.id === currentViewedBookingId);
+                if (booking) {
+                    booking.status = 'Completed';
+                    alert(`Tour ${currentViewedBookingId} marked as completed!`);
+                    loadSection('guide_dashboard'); // Re-load to update table
+                }
+            }
+        };
+
+        renderGuideBookings();
+    }
+
+    // Tour Guide Past Tours
+    function initGuidePastTours() {
+        const tbody = document.querySelector('#guidePastToursTable tbody');
+
+        function renderPastTours() {
+            tbody.innerHTML = '';
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const pastBookings = bookingsData.filter(booking =>
+                booking.assignedGuide === loggedInUser.name &&
+                (booking.status === 'Completed' || booking.status === 'Cancelled' || new Date(booking.date) < today)
+            ).sort((a, b) => new Date(b.date) - new Date(a.date)); // Sort by date descending
+
+            if (pastBookings.length === 0) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="5" style="text-align: center;">No past tours recorded.</td>`;
+                tbody.appendChild(tr);
+            } else {
+                pastBookings.forEach(booking => {
+                    const lead = leadsData.find(l => l.id === booking.leadId);
+                    const clientName = lead ? lead.clientName : 'N/A';
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${booking.id}</td>
+                        <td>${booking.service}</td>
+                        <td>${booking.date}</td>
+                        <td>${clientName}</td>
+                        <td><span style="color: ${getStatusColor(booking.status)};">${booking.status}</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+        renderPastTours();
+    }
+
+    // Transfer Schedule
+    function initTransferSchedule() {
+        const tbody = document.querySelector('#transferScheduleTable tbody');
+        const transferDetailsView = document.getElementById('transferDetailsView');
+        const markTransferCompletedBtn = document.getElementById('markTransferCompletedBtn');
+        let currentViewedBookingId = null;
+
+        function renderTransferBookings() {
+            tbody.innerHTML = '';
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const upcomingTransfers = bookingsData.filter(booking =>
+                booking.assignedTransfer === loggedInUser.name &&
+                booking.status !== 'Completed' && booking.status !== 'Cancelled' &&
+                new Date(booking.date) >= today
+            ).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            if (upcomingTransfers.length === 0) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="7" style="text-align: center;">No upcoming transfers assigned.</td>`;
+                tbody.appendChild(tr);
+            } else {
+                upcomingTransfers.forEach(booking => {
+                    const lead = leadsData.find(l => l.id === booking.leadId);
+                    const clientName = lead ? lead.clientName : 'N/A';
+                    const assignedVehicle = vehiclesData.find(v => v.driver === booking.assignedTransfer);
+                    const vehiclePlate = assignedVehicle ? assignedVehicle.plate : 'N/A';
+
+                    const tr = document.createElement('tr');
+                    tr.dataset.bookingId = booking.id;
+                    tr.innerHTML = `
+                        <td>${booking.id}</td>
+                        <td>${booking.service}</td>
+                        <td>${booking.date}</td>
+                        <td>${clientName}</td>
+                        <td>${vehiclePlate}</td>
+                        <td><span style="color: ${getStatusColor(booking.status)};">${booking.status}</span></td>
+                        <td>
+                            <button class="action-btn view">View Details</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                    tr.querySelector('.view').onclick = () => showTransferDetails(booking.id);
+                });
+            }
+            transferDetailsView.style.display = 'none';
+        }
+
+        function showTransferDetails(bookingId) {
+            const booking = bookingsData.find(b => b.id === bookingId);
+            if (!booking) return;
+
+            const lead = leadsData.find(l => l.id === booking.leadId);
+            const assignedVehicle = vehiclesData.find(v => v.driver === booking.assignedTransfer);
+            const vehiclePlate = assignedVehicle ? assignedVehicle.plate : 'N/A';
+
+            document.getElementById('transferScheduleTable').style.display = 'none';
+            transferDetailsView.style.display = 'block';
+
+            document.getElementById('transfer_detail_id').textContent = booking.id;
+            document.getElementById('transfer_detail_service').textContent = booking.service;
+            document.getElementById('transfer_detail_date').textContent = booking.date;
+            document.getElementById('transfer_detail_client').textContent = lead ? lead.clientName : 'N/A';
+            document.getElementById('transfer_detail_contact').textContent = lead ? lead.contact : 'N/A';
+            document.getElementById('transfer_detail_vehicle').textContent = vehiclePlate;
+            document.getElementById('transfer_detail_status').innerHTML = `<span style="color: ${getStatusColor(booking.status)};">${booking.status}</span>`;
+
+            markTransferCompletedBtn.style.display = (booking.status !== 'Completed' && booking.status !== 'Cancelled') ? 'inline-block' : 'none';
+            currentViewedBookingId = bookingId;
+        }
+
+        markTransferCompletedBtn.onclick = () => {
+            if (currentViewedBookingId && confirm(`Mark transfer ${currentViewedBookingId} as completed?`)) {
+                const booking = bookingsData.find(b => b.id === currentViewedBookingId);
+                if (booking) {
+                    booking.status = 'Completed';
+                    alert(`Transfer ${currentViewedBookingId} marked as completed!`);
+                    loadSection('transfer_dashboard');
+                }
+            }
+        };
+
+        renderTransferBookings();
+    }
+
+    // Transfer History
+    function initTransferHistory() {
+        const tbody = document.querySelector('#transferHistoryTable tbody');
+
+        function renderTransferHistory() {
+            tbody.innerHTML = '';
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const pastTransfers = bookingsData.filter(booking =>
+                booking.assignedTransfer === loggedInUser.name &&
+                (booking.status === 'Completed' || booking.status === 'Cancelled' || new Date(booking.date) < today)
+            ).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            if (pastTransfers.length === 0) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="6" style="text-align: center;">No past transfers recorded.</td>`;
+                tbody.appendChild(tr);
+            } else {
+                pastTransfers.forEach(booking => {
+                    const lead = leadsData.find(l => l.id === booking.leadId);
+                    const clientName = lead ? lead.clientName : 'N/A';
+                    const assignedVehicle = vehiclesData.find(v => v.driver === booking.assignedTransfer);
+                    const vehiclePlate = assignedVehicle ? assignedVehicle.plate : 'N/A';
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${booking.id}</td>
+                        <td>${booking.service}</td>
+                        <td>${booking.date}</td>
+                        <td>${clientName}</td>
+                        <td>${vehiclePlate}</td>
+                        <td><span style="color: ${getStatusColor(booking.status)};">${booking.status}</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+        renderTransferHistory();
+    }
+
+
+    // Accounting Transactions
+    function initTransactions() {
+        const addBtn = document.getElementById('addTransactionBtn');
+        const formContainer = document.getElementById('transactionFormContainer');
+        const form = document.getElementById('transactionForm');
+        const tbody = document.querySelector('#transactionsTable tbody');
+        let editTrxId = null;
+
+        function renderTransactions() {
+            tbody.innerHTML = '';
+            transactionsData.forEach(trx => {
+                const tr = document.createElement('tr');
+                tr.dataset.trxId = trx.id;
+                tr.innerHTML = `
+                    <td>${trx.id}</td>
+                    <td>${trx.bookingId || 'N/A'}</td>
+                    <td>${trx.type}</td>
+                    <td>${trx.description}</td>
+                    <td>$${trx.amount.toFixed(2)}</td>
+                    <td>${trx.date}</td>
+                    <td><span style="color: ${getStatusColor(trx.status)};">${trx.status}</span></td>
+                    <td>
+                        <button class="action-btn edit">Edit</button>
+                        <button class="action-btn delete">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+                addTransactionRowListeners(tr);
+            });
+        }
+
+        function addTransactionRowListeners(tr) {
+            tr.querySelector('.edit').onclick = () => {
+                formContainer.style.display = 'block';
+                editTrxId = tr.dataset.trxId;
+                const trx = transactionsData.find(t => t.id === editTrxId);
+                form.trx_booking_id.value = trx.bookingId || '';
+                form.trx_type.value = trx.type;
+                form.trx_description.value = trx.description;
+                form.trx_amount.value = trx.amount;
+                form.trx_date.value = trx.date;
+                form.trx_status.value = trx.status;
+                form.querySelector('button[type="submit"]').textContent = 'Update Transaction';
+            };
+            tr.querySelector('.delete').onclick = () => {
+                if (confirm(`Are you sure you want to delete transaction ${tr.dataset.trxId}?`)) {
+                    transactionsData = transactionsData.filter(t => t.id !== tr.dataset.trxId);
+                    renderTransactions();
+                    if (editTrxId === tr.dataset.trxId) {
+                        formContainer.style.display = 'none';
+                        editTrxId = null;
+                    }
+                }
+            };
+        }
+
+        addBtn.onclick = () => {
+            formContainer.style.display = 'block';
+            form.reset();
+            editTrxId = null;
+            form.querySelector('button[type="submit"]').textContent = 'Save Transaction';
+        };
+
+        form.querySelector('.cancel').onclick = () => {
+            formContainer.style.display = 'none';
+            editTrxId = null;
+        };
+
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            const bookingId = form.trx_booking_id.value.trim() || null;
+            const type = form.trx_type.value;
+            const description = form.trx_description.value.trim();
+            const amount = parseFloat(form.trx_amount.value);
+            const date = form.trx_date.value;
+            const status = form.trx_status.value;
+
+            if (editTrxId) {
+                const trxToUpdate = transactionsData.find(t => t.id === editTrxId);
+                if (trxToUpdate) {
+                    trxToUpdate.bookingId = bookingId;
+                    trxToUpdate.type = type;
+                    trxToUpdate.description = description;
+                    trxToUpdate.amount = amount;
+                    trxToUpdate.date = date;
+                    trxToUpdate.status = status;
+                }
+            } else {
+                const newTrxId = generateUniqueId('TRX');
+                transactionsData.push({ id: newTrxId, bookingId, type, description, amount, date, status });
+            }
+            formContainer.style.display = 'none';
+            editTrxId = null;
+            renderTransactions();
+        };
+
+        renderTransactions();
+    }
+
+
+    // --- Initial Load (Show Login Page) ---
+    // Ensure the login page is shown first
+    loginPage.style.display = 'flex';
+    appContainer.style.display = 'none';
+
+</script>
+
+</body>
+</html>
