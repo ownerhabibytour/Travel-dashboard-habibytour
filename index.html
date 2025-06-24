@@ -1,0 +1,2759 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Travel CRM System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script> <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+    <style>
+        /* Base styles */
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        /* Login Page Styles */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0dbd9b, #0aa385);
+        }
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 380px;
+            max-width: 90%;
+        }
+        .login-box h2 {
+            margin-bottom: 30px;
+            color: #0dbd9b;
+            font-size: 28px;
+        }
+        .login-box .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .login-box label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        .login-box input[type="text"],
+        .login-box input[type="password"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .login-box button {
+            background: #0dbd9b;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s ease;
+            margin-top: 15px;
+        }
+        .login-box button:hover {
+            background: #0aa385;
+        }
+        .login-box .error-message {
+            color: #e74c3c;
+            margin-top: 15px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Main App Layout */
+        .app-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Main Header Styles */
+        .main-header {
+            background: #ffffff;
+            padding: 15px 30px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            flex-shrink: 0;
+            z-index: 50;
+            width: 100%; /* Ensure header spans full width within main-content */
+        }
+        .header-left .welcome-text {
+            font-size: 1.1em;
+            color: #555;
+        }
+        .header-left .welcome-text strong {
+            color: #0dbd9b;
+        }
+        .header-right {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        .header-icon-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #666;
+            cursor: pointer;
+            position: relative;
+            transition: color 0.3s ease;
+        }
+        .header-icon-btn:hover {
+            color: #0dbd9b;
+        }
+        .header-icon-btn .badge {
+            position: absolute;
+            top: -5px;
+            right: -10px;
+            background: #dc3545; /* Red for notifications/messages */
+            color: white;
+            font-size: 12px;
+            border-radius: 50%;
+            padding: 3px 7px;
+            min-width: 20px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .header-icon-btn.profile-btn {
+            font-size: 30px; /* Slightly larger for profile icon */
+        }
+
+
+        /* Sidebar */
+        .sidebar {
+            background: #222;
+            width: 70px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px 0;
+            gap: 20px;
+            color: #bbb;
+            flex-shrink: 0;
+        }
+        .sidebar button {
+            background: none;
+            border: none;
+            color: inherit;
+            font-size: 28px;
+            cursor: pointer;
+            position: relative;
+            transition: color 0.3s;
+            width: 100%;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .sidebar button:hover,
+        .sidebar button.active {
+            color: #0dbd9b;
+            background-color: #333;
+        }
+        .sidebar button .tooltip {
+            position: absolute;
+            left: 75px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #0dbd9b;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            user-select: none;
+            z-index: 100;
+        }
+        .sidebar button:hover .tooltip,
+        .sidebar button.active .tooltip {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .sidebar .logout-button {
+            margin-top: auto;
+            color: #ccc;
+        }
+        .sidebar .logout-button:hover {
+            color: #e74c3c;
+        }
+
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            padding: 0; /* Remove padding here, add to main-content-area */
+            overflow-y: auto;
+            background: #fff;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column; /* Stack header and content vertically */
+        }
+
+        .main-content-area { /* New wrapper for actual content, excluding header */
+            flex-grow: 1;
+            padding: 30px; /* Add padding here */
+        }
+
+
+        h2 {
+            color: #0dbd9b;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        h3 {
+            color: #0aa385;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        /* Generic Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 14px 18px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+            font-size: 15px;
+        }
+        th {
+            background-color: #0dbd9b;
+            color: #fff;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #e8f5e9;
+        }
+
+        /* Action Buttons */
+        button.action-btn {
+            background: #0dbd9b;
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 8px;
+            transition: background 0.3s ease, transform 0.2s ease;
+            white-space: nowrap;
+        }
+        button.action-btn.add-btn {
+            background: #28a745;
+            margin-bottom: 15px;
+        }
+        button.action-btn.add-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        button.action-btn.edit {
+            background: #007bff;
+        }
+        button.action-btn.edit:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        button.action-btn.delete {
+            background: #dc3545;
+        }
+        button.action-btn.delete:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+        button.action-btn.view {
+            background: #6c757d;
+        }
+        button.action-btn.view:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+        button.action-btn.convert {
+            background: #17a2b8; /* Teal for convert */
+        }
+        button.action-btn.convert:hover {
+            background: #138496;
+            transform: translateY(-2px);
+        }
+
+
+        /* Form Styles */
+        .form-container {
+            background: #f9f9f9;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            max-width: 700px;
+            margin-top: 25px;
+        }
+        .form-container label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 8px;
+            color: #444;
+        }
+        .form-container input:not([type="checkbox"]):not([type="radio"]),
+        .form-container select,
+        .form-container textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .form-container textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        .form-container button[type="submit"] {
+            background: #0dbd9b;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-right: 10px;
+        }
+        .form-container button[type="submit"]:hover {
+            background: #0aa385;
+        }
+        .form-container button.cancel {
+            background: #aaa;
+            color: #222;
+        }
+        .form-container button.cancel:hover {
+            background: #888;
+        }
+        .form-container .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .form-container .checkbox-group input[type="checkbox"] {
+            margin-right: 10px;
+            width: auto;
+        }
+
+        /* Dashboard specific */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        .dashboard-card {
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            padding: 25px;
+            text-align: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+        }
+        .dashboard-card .icon {
+            font-size: 48px;
+            color: #0dbd9b;
+            margin-bottom: 15px;
+        }
+        .dashboard-card h3 {
+            margin: 0;
+            color: #555;
+            font-size: 18px;
+        }
+        .dashboard-card p {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+            margin-top: 10px;
+        }
+
+        /* Specific section styles */
+        .welcome-message {
+            background: #e8f5e9;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 5px solid #0dbd9b;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        .welcome-message p {
+            margin: 0;
+            font-size: 18px;
+        }
+        .welcome-message strong {
+            color: #0aa385;
+        }
+
+        /* Details View & Modals */
+        .details-view, .modal {
+            background: #fdfdfd;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-top: 20px;
+        }
+        .details-view h3, .modal h3 {
+            margin-top: 0;
+            color: #0dbd9b;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .details-view p, .modal p {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        .details-view strong, .modal strong {
+            color: #555;
+            display: inline-block;
+            min-width: 120px;
+        }
+        /* Modal specific styling */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            z-index: 1000;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            max-width: 600px; /* Adjust as needed */
+            width: 90%;
+        }
+        #whatsappShare, #emailShare {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            color: white;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        #whatsappShare { background: #25D366; }
+        #emailShare { background: #0072c6; }
+    </style>
+</head>
+<body>
+
+    <div class="login-container" id="loginPage">
+        <div class="login-box">
+            <h2>Travel CRM Login</h2>
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Enter your username" />
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter your password" />
+            </div>
+            <button id="loginBtn">Login</button>
+            <p class="error-message" id="loginError"></p>
+            <h1 style="margin-top: 20px; font-size: 14px; color: #777;">
+                Habiby Tour
+            </h1>
+        </div>
+    </div>
+
+    <div class="app-container" id="appContainer" style="display: none;">
+        <nav class="sidebar" id="sidebar" aria-label="Main Sidebar Navigation">
+            <button class="logout-button" aria-label="Logout">
+                <i class="fas fa-sign-out-alt"></i>
+                <span class="tooltip">Logout</span>
+            </button>
+        </nav>
+
+        <main class="main-content" id="mainContent" tabindex="0" aria-live="polite" aria-atomic="true">
+            <header class="main-header" id="mainHeader">
+                <div class="header-left">
+                    <span class="welcome-text">Welcome, <strong id="headerUserName">User</strong>!</span>
+                </div>
+                <div class="header-right">
+                    <button class="header-icon-btn" aria-label="Notifications">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge" id="notificationBadge">3</span>
+                    </button>
+                    <button class="header-icon-btn" aria-label="Messages">
+                        <i class="fas fa-comments"></i>
+                        <span class="badge" id="messageBadge">5</span>
+                    </button>
+                    <button class="header-icon-btn profile-btn" aria-label="User Profile">
+                        <i class="fas fa-user-circle"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="main-content-area" id="mainContentArea">
+                </div>
+        </main>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="closeModal()"></div>
+    <div class="modal" id="clientModal">
+        <h3>Package Details</h3>
+        <pre id="modalContent"></pre>
+        <button class="action-btn cancel" onclick="closeModal()">Close</button>
+    </div>
+
+<script>
+    // --- Data Storage (Mock Backend & Firebase Integration) ---
+    // User authentication data (for mock login)
+    let loggedInUser = null;
+
+    const users = {
+        'admin': { username: 'admin', password: 'adminpass', role: 'admin', name: 'Admin User' },
+        'sales': { username: 'sales', password: 'salespass', role: 'sales', name: 'Sara Sales' },
+        'ops': { username: 'ops', password: 'opspass', role: 'operations', name: 'Omar Operations' },
+        'tour': { username: 'tour', password: 'tourpass', role: 'tour_guide', name: 'Tarek Tour' },
+        'transfer': { username: 'transfer', password: 'transferpass', role: 'transfer', name: 'Fahad Driver' },
+        'account': { username: 'account', password: 'accountpass', role: 'accounting', name: 'Amira Accountant' },
+    };
+
+    // Firebase Initialization
+    // REPLACE with your actual Firebase API Key and Project Config
+    const firebaseConfig = {
+        apiKey: "AIzaSyBj-1e9pQ7XADBxt_ko6-nScybee0C1L0Y",
+        authDomain: "system-habibytour.firebaseapp.com",
+        projectId: "system-habibytour",
+        storageBucket: "system-habibytour.appspot.com",
+        messagingSenderId: "799067637013",
+        appId: "1:799067637013:web:f71bc2d1c8651866da151c",
+        measurementId: "G-9Z9Y72R92W"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Mock CRM data (some data might be superseded by Firebase, but kept for other sections where Firebase isn't yet integrated)
+    let leadsData = [
+        { id: 'L001', clientName: 'Ahmed Khalid', service: 'Desert Safari', status: 'New', salesAgent: 'Sara Sales', contact: 'ahmed@example.com' },
+        { id: 'L002', clientName: 'Fatima Ali', service: 'City Tour', status: 'Contacted', salesAgent: 'Sara Sales', contact: 'fatima@example.com' },
+        { id: 'L003', clientName: 'Mohammed Essa', service: 'Hatta Mountain Tour', status: 'Proposal Sent', salesAgent: 'Sara Sales', contact: 'mohammed@example.com' },
+        { id: 'L004', clientName: 'Aisha Abdullah', service: 'Abu Dhabi City Tour', status: 'New', salesAgent: 'Sara Sales', contact: 'aisha@example.com' },
+    ];
+
+    // BookingsData is largely replaced by Firebase 'clients' collection for Sales & Admin views.
+    // Kept for operations/guide/transfer sections if they rely on this mock for now.
+    let bookingsData = [
+        { id: 'B001', leadId: 'L001', clientName: 'Ahmed Khalid', service: 'Desert Safari', date: '2025-07-10', status: 'Confirmed', salesAgent: 'Sara Sales', assignedGuide: 'Tarek Tour', assignedTransfer: 'Fahad Driver', amount: 350 },
+        { id: 'B002', leadId: 'L002', clientName: 'Fatima Ali', service: 'City Tour', date: '2025-07-15', status: 'Pending Guide', salesAgent: 'Sara Sales', assignedGuide: '', assignedTransfer: '', amount: 200 },
+        { id: 'B003', leadId: 'L003', clientName: 'Mohammed Essa', service: 'Hatta Mountain Tour', date: '2025-07-20', status: 'Confirmed', salesAgent: 'Sara Sales', assignedGuide: 'Lina Explorer', assignedTransfer: 'Kamal Drive', amount: 450 },
+        { id: 'B004', leadId: 'L004', clientName: 'Aisha Abdullah', service: 'Abu Dhabi City Tour', date: '2025-08-01', status: 'Confirmed', salesAgent: 'Sara Sales', assignedGuide: '', assignedTransfer: '', amount: 600 },
+    ];
+
+    let tourGuidesData = [
+        { id: 'TG001', name: 'Tarek Tour', specialization: 'Desert, City', phone: '+971501112222', status: 'Active' },
+        { id: 'TG002', name: 'Lina Explorer', specialization: 'Museums, History', phone: '+971503334444', status: 'Active' },
+        { id: 'TG003', name: 'Khalid Cultural', specialization: 'Culture, Souks', phone: '+971505556666', status: 'On Leave' },
+    ];
+
+    let vehiclesData = [
+        { id: 'V001', plate: 'DXB-1234', type: 'SUV', capacity: 4, driver: 'Fahad Driver', status: 'Available' },
+        { id: 'V002', plate: 'SHJ-5678', type: 'Van', capacity: 7, driver: 'Kamal Drive', status: 'Available' },
+        { id: 'V003', plate: 'AUH-9012', type: 'Sedan', capacity: 3, driver: 'Ali Road', status: 'Maintenance' },
+    ];
+
+    let transactionsData = [
+        { id: 'TRX001', bookingId: 'B001', type: 'Income', description: 'Safari Payment - Ahmed Khalid', amount: 350, date: '2025-06-01', status: 'Paid' },
+        { id: 'TRX002', bookingId: 'B002', type: 'Expense', description: 'Guide Fee (pending) - Fatima Ali', amount: 100, date: '2025-06-02', status: 'Pending' },
+        { id: 'TRX003', bookingId: 'B003', type: 'Income', description: 'Hatta Tour Payment - Mohammed Essa', amount: 450, date: '2025-06-05', status: 'Paid' },
+        { id: 'TRX004', bookingId: 'B004', type: 'Income', description: 'Abu Dhabi Tour Deposit - Aisha Abdullah', amount: 300, date: '2025-06-08', status: 'Paid' },
+    ];
+
+
+    // --- DOM Elements ---
+    const loginPage = document.getElementById('loginPage');
+    const appContainer = document.getElementById('appContainer');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginError = document.getElementById('loginError');
+    const sidebar = document.getElementById('sidebar');
+    const mainContentArea = document.getElementById('mainContentArea'); // Changed to content area
+    const mainHeader = document.getElementById('mainHeader'); // Get header element
+    const headerUserName = document.getElementById('headerUserName'); // User name in header
+
+    const clientModal = document.getElementById('clientModal');
+    const overlay = document.getElementById('overlay');
+    const modalContent = document.getElementById('modalContent');
+
+
+    // --- Helper Functions ---
+    // Gets value from a DOM element by ID. Handles multi-selects.
+    function getVal(id) {
+        const element = document.getElementById(id);
+        if (!element) {
+            console.warn(`Element with ID '${id}' not found.`);
+            return '';
+        }
+        if (element.tagName === 'SELECT' && element.multiple) {
+            return Array.from(element.selectedOptions).map(option => option.value);
+        }
+        return element.value.trim();
+    }
+
+    // Sets value for a DOM element by ID. Handles multi-selects.
+    function setVal(id, value) {
+        const element = document.getElementById(id);
+        if (element) {
+            if (element.tagName === 'SELECT' && element.multiple) {
+                Array.from(element.options).forEach(option => {
+                    option.selected = (Array.isArray(value) && value.includes(option.value)) || (!Array.isArray(value) && option.value === value);
+                });
+            } else {
+                element.value = value;
+            }
+        }
+    }
+
+    // Returns a color code based on status for visual distinction.
+    function getStatusColor(status) {
+        switch(status) {
+            case 'New': return '#007bff'; // Blue
+            case 'Contacted': return '#ffc107'; // Yellow
+            case 'Confirmed': return '#28a745'; // Green
+            case 'Pending': return '#ffc107'; // Yellow
+            case 'Completed': return '#28a745'; // Green
+            case 'Cancelled': return '#dc3545'; // Red
+            case 'Active': return '#28a745';
+            case 'On Leave': return '#6c757d'; // Grey
+            case 'Available': return '#28a745';
+            case 'Booked': return '#007bff';
+            case 'Maintenance': return '#6c757d';
+            case 'Paid': return '#28a745';
+            case 'Overdue': return '#dc3545';
+            case 'Pending Guide': return '#ffc107';
+            case 'Pending Transfer': return '#ffc107';
+            case 'Converted': return '#28a745';
+            case 'Lost': return '#dc3545';
+            case 'Proposal Sent': return '#17a2b8'; // Teal
+            case 'Negotiation': return '#fd7e14'; // Orange
+            default: return '#333'; // Default dark grey
+        }
+    }
+
+    // Creates an HTML button element with given text, class, and click handler.
+    function createActionButton(text, className, onClick) {
+        const button = document.createElement('button');
+        button.textContent = text;
+        button.className = `action-btn ${className}`;
+        button.onclick = onClick;
+        return button;
+    }
+
+    // Generates a simple unique ID with a prefix.
+    function generateUniqueId(prefix) {
+        return prefix + Date.now().toString(36) + Math.random().toString(36).substr(2, 5).toUpperCase();
+    }
+
+    // --- Role-based Sidebar Navigation Configuration ---
+    // Defines which sections each user role can access.
+    const roleSidebars = {
+        'admin': [
+            { section: 'admin_dashboard', icon: 'fas fa-cogs', tooltip: 'Admin Dashboard' },
+            { section: 'manage_users', icon: 'fas fa-users-cog', tooltip: 'Manage Users' },
+            { section: 'manage_all_bookings', icon: 'fas fa-book-open', tooltip: 'All Bookings' },
+            { section: 'system_reports', icon: 'fas fa-chart-pie', tooltip: 'System Reports' },
+        ],
+        'sales': [
+            { section: 'sales_dashboard', icon: 'fas fa-chart-line', tooltip: 'Sales Dashboard' },
+            { section: 'leads', icon: 'fas fa-handshake', tooltip: 'Leads Management' },
+            { section: 'sales_bookings', icon: 'fas fa-calendar-check', tooltip: 'My Bookings & Create Package' }, // Combined
+            { section: 'sales_report_firebase', icon: 'fas fa-file-invoice-dollar', tooltip: 'Sales Report' }, // New Firebase report
+        ],
+        'operations': [
+            { section: 'operations_dashboard', icon: 'fas fa-compass', tooltip: 'Operations Dashboard' },
+            { section: 'manage_bookings', icon: 'fas fa-calendar-alt', tooltip: 'Manage Bookings' },
+            { section: 'manage_guides', icon: 'fas fa-person-hiking', tooltip: 'Tour Guides' },
+            { section: 'manage_vehicles', icon: 'fas fa-car', tooltip: 'Vehicles' },
+            { section: 'operational_reports', icon: 'fas fa-clipboard-list', tooltip: 'Operational Reports' },
+        ],
+        'tour_guide': [
+            { section: 'guide_dashboard', icon: 'fas fa-map-marker-alt', tooltip: 'My Schedule' },
+            { section: 'guide_past_tours', icon: 'fas fa-history', tooltip: 'Past Tours' },
+        ],
+        'transfer': [
+            { section: 'transfer_dashboard', icon: 'fas fa-route', tooltip: 'My Transfers' },
+            { section: 'transfer_history', icon: 'fas fa-archive', tooltip: 'Transfer History' },
+        ],
+        'accounting': [
+            { section: 'accounting_dashboard', icon: 'fas fa-calculator', tooltip: 'Accounting Dashboard' },
+            { section: 'transactions', icon: 'fas fa-exchange-alt', tooltip: 'Transactions' },
+            { section: 'invoices', icon: 'fas fa-receipt', tooltip: 'Invoices' },
+            { section: 'financial_reports', icon: 'fas fa-chart-bar', tooltip: 'Financial Reports' },
+        ],
+    };
+
+    // --- Page Content for Each Section (HTML strings or functions) ---
+    // These define the structure and initial content for each view.
+    const pageContent = {
+        // --- ADMIN SECTIONS ---
+        admin_dashboard: () => `
+            <div class="welcome-message">
+                <p>Welcome, <strong>${loggedInUser.name}</strong>! This is your Admin Overview.</p>
+            </div>
+            <h2>Admin Dashboard Summary</h2>
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-users-cog"></i></div>
+                    <h3>Total Users</h3>
+                    <p>${Object.keys(users).length}</p>
+                </div>
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-book-open"></i></div>
+                    <h3>Total Bookings (Firebase)</h3>
+                    <p id="adminTotalFirebaseBookings">Loading...</p>
+                </div>
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-handshake"></i></div>
+                    <h3>Active Leads (Mock)</h3>
+                    <p>${leadsData.filter(lead => lead.status !== 'Converted' && lead.status !== 'Lost').length}</p>
+                </div>
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-dollar-sign"></i></div>
+                    <h3>Total Income (Firebase)</h3>
+                    <p id="adminTotalFirebaseIncome">Loading...</p>
+                </div>
+            </div>
+            <h3>Quick Actions</h3>
+            <ul>
+                <li><a href="#" onclick="loadSection('manage_users'); return false;">Manage System Users</a></li>
+                <li><a href="#" onclick="loadSection('manage_all_bookings'); return false;">Review All Bookings</a></li>
+            </ul>
+        `,
+        manage_users: `
+            <h2>Manage System Users</h2>
+            <button id="addAdminUserBtn" class="action-btn add-btn">+ Add New User</button>
+            <table id="usersTable" aria-label="Users Table">
+                <thead>
+                    <tr><th>Username</th><th>Name</th><th>Role</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+            <div id="userFormContainer" class="form-container" style="display:none;">
+                <h3>Add/Edit User</h3>
+                <form id="userForm">
+                    <input type="hidden" id="user_original_username" name="originalUsername" />
+                    <label for="user_username">Username</label>
+                    <input type="text" id="user_username" name="username" required />
+                    <label for="user_password">Password</label>
+                    <input type="password" id="user_password" name="password" required />
+                    <label for="user_name">Full Name</label>
+                    <input type="text" id="user_name" name="name" required />
+                    <label for="user_role">Role</label>
+                    <select id="user_role" name="role" required>
+                        <option value="admin">Admin</option>
+                        <option value="sales">Sales</option>
+                        <option value="operations">Operations</option>
+                        <option value="tour_guide">Tour Guide</option>
+                        <option value="transfer">Transfer</option>
+                        <option value="accounting">Accounting</option>
+                    </select>
+                    <button type="submit">Save User</button>
+                    <button type="button" class="cancel" onclick="document.getElementById('userFormContainer').style.display='none';">Cancel</button>
+                </form>
+            </div>
+        `,
+        manage_all_bookings: `
+            <h2>All Bookings Overview (Firebase)</h2>
+            <table id="allBookingsTable" aria-label="All Bookings Table">
+                <thead>
+                    <tr><th>Firebase ID</th><th>Client</th><th>Main Service</th><th>Arrival</th><th>Status</th><th>Sales Agent</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+            <div id="allBookingDetailsView" class="details-view" style="display:none;">
+                <h3>Booking Details <span id="viewBookingFirebaseIdDisplay"></span></h3>
+                <p><strong>Firebase Doc ID:</strong> <span id="viewBookingFirebaseId"></span></p>
+                <p><strong>Client Name:</strong> <span id="viewBookingClientName"></span></p>
+                <p><strong>Phone:</strong> <span id="viewBookingPhone"></span></p>
+                <p><strong>Email:</strong> <span id="viewBookingEmail"></span></p>
+                <p><strong>Arrival:</strong> <span id="viewBookingArrival"></span></p>
+                <p><strong>Departure:</strong> <span id="viewBookingDeparture"></span></p>
+                <p><strong>Hotel:</strong> <span id="viewBookingHotel"></span></p>
+                <p><strong>People:</strong> <span id="viewBookingPeople"></span></p>
+                <p><strong>Accommodation:</strong> <span id="viewBookingAccommodation"></span></p>
+                <p><strong>Nationality:</strong> <span id="viewBookingNationality"></span></p>
+                <p><strong>Excursions:</strong> <span id="viewBookingExcursions"></span></p>
+                <p><strong>Price:</strong> <span id="viewBookingPrice"></span></p>
+                <p><strong>Payment Method:</strong> <span id="viewBookingPaymentMethod"></span></p>
+                <p><strong>Comments:</strong> <span id="viewBookingComment"></span></p>
+                <p><strong>Sales Agent:</strong> <span id="viewBookingSalesAgent"></span></p>
+                <p><strong>Status:</strong> <span id="viewBookingStatus" style="font-weight: bold;"></span></p>
+                <p><strong>Assigned Guide:</strong> <span id="viewBookingGuide">N/A</span></p>
+                <p><strong>Assigned Transfer:</strong> <span id="viewBookingTransfer">N/A</span></p>
+                <button class="action-btn cancel" onclick="document.getElementById('allBookingDetailsView').style.display='none'; renderAllFirebaseBookingsTable();">Back to All Bookings</button>
+            </div>
+        `,
+        system_reports: `
+            <h2>System-Wide Reports</h2>
+            <p>Generate comprehensive reports for all aspects of the CRM.</p>
+            <ul>
+                <li><a href="#" download="system_performance.pdf">System Performance Report</a></li>
+                <li><a href="#" download="user_activity.pdf">User Activity Log</a></li>
+                <li><a href="#" download="revenue_analysis.pdf">Overall Revenue Analysis</a></li>
+            </ul>
+        `,
+
+        // --- SALES SECTIONS ---
+        sales_dashboard: () => `
+            <div class="welcome-message">
+                <p>Welcome, <strong>${loggedInUser.name}</strong>! Here's your Sales Overview.</p>
+            </div>
+            <h2>Sales Dashboard Summary</h2>
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-handshake"></i></div>
+                    <h3>My Active Leads (Mock)</h3>
+                    <p>${leadsData.filter(lead => lead.salesAgent === loggedInUser.name && lead.status !== 'Converted' && lead.status !== 'Lost').length}</p>
+                </div>
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-calendar-check"></i></div>
+                    <h3>My Confirmed Bookings (Firebase)</h3>
+                    <p id="salesFirebaseConfirmedBookings">Loading...</p>
+                </div>
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-percent"></i></div>
+                    <h3>Conversion Rate (Mock)</h3>
+                    <p>${(leadsData.filter(lead => lead.salesAgent === loggedInUser.name).length > 0 ? (leadsData.filter(lead => lead.salesAgent === loggedInUser.name && lead.status === 'Converted').length / leadsData.filter(lead => lead.salesAgent === loggedInUser.name).length * 100) : 0).toFixed(1)}%</p>
+                </div>
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-dollar-sign"></i></div>
+                    <h3>Total Sales Value (Firebase)</h3>
+                    <p id="salesFirebaseTotalSalesValue">Loading...</p>
+                </div>
+            </div>
+            <h3>Quick Actions</h3>
+            <ul>
+                <li><a href="#" onclick="loadSection('leads'); return false;">Manage My Leads</a></li>
+                <li><a href="#" onclick="loadSection('sales_bookings'); return false;">View & Create Bookings</a></li>
+            </ul>
+        `,
+        leads: `
+            <h2>Leads Management (Mock Data)</h2>
+            <button id="addLeadBtn" class="action-btn add-btn">+ Add New Lead</button>
+            <table id="leadsTable" aria-label="Leads Table">
+                <thead>
+                    <tr><th>Lead ID</th><th>Client Name</th><th>Service</th><th>Status</th><th>Contact</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+            <div id="leadFormContainer" class="form-container" style="display:none;">
+                <h3>Add/Edit Lead</h3>
+                <form id="leadForm">
+                    <input type="hidden" id="lead_id" name="id" />
+                    <label for="lead_client_name">Client Name</label>
+                    <input type="text" id="lead_client_name" name="clientName" required />
+                    <label for="lead_service">Service Interested In</label>
+                    <input type="text" id="lead_service" name="service" required />
+                    <label for="lead_contact">Contact Email/Phone</label>
+                    <input type="text" id="lead_contact" name="contact" required />
+                    <label for="lead_status">Status</label>
+                    <select id="lead_status" name="status" required>
+                        <option value="New">New</option>
+                        <option value="Contacted">Contacted</option>
+                        <option value="Proposal Sent">Proposal Sent</option>
+                        <option value="Negotiation">Negotiation</option>
+                        <option value="Converted">Converted (Closed Won)</option>
+                        <option value="Lost">Lost (Closed Lost)</option>
+                    </select>
+                    <button type="submit">Save Lead</button>
+                    <button type="button" class="cancel" onclick="document.getElementById('leadFormContainer').style.display='none'; renderLeadsTable();">Cancel</button>
+                </form>
+            </div>
+            <div id="leadDetailsView" class="details-view" style="display:none;">
+                <h3>Lead Details <span id="viewLeadId"></span></h3>
+                <p><strong>Client Name:</strong> <span id="viewLeadClientName"></span></p>
+                <p><strong>Service:</strong> <span id="viewLeadService"></span></p>
+                <p><strong>Contact:</strong> <span id="viewLeadContact"></span></p>
+                <p><strong>Status:</strong> <span id="viewLeadStatus" style="font-weight: bold;"></span></p>
+                <p><strong>Sales Agent:</strong> <span id="viewLeadSalesAgent"></span></p>
+                <button class="action-btn cancel" onclick="document.getElementById('leadDetailsView').style.display='none'; renderLeadsTable();">Back to Leads</button>
+            </div>
+        `,
+        sales_bookings: `
+            <h2>My Package Bookings (Firebase)</h2>
+            <button id="addPackageBookingBtn" class="action-btn add-btn">+ Create New Package Booking</button>
+            <table id="salesBookingsTable" aria-label="Sales Bookings Table">
+                <thead>
+                    <tr><th>Client</th><th>Email</th><th>Arrival</th><th>Departure</th><th>Price</th><th>Status</th><th>Actions</th></tr>
+                </thead>
+                <tbody id="salesBookingsTableBody"></tbody>
+            </table>
+
+            <div id="packageBookingFormContainer" class="form-container" style="display:none;">
+                <h3>Add/Edit Package Booking</h3>
+                <form id="packageBookingForm">
+                    <input type="hidden" id="booking_firebase_doc_id" />
+                    <label for="booking_name">Client Name</label>
+                    <input type="text" id="booking_name" placeholder="Client Name" required />
+                    <label for="booking_phone">Phone Number</label>
+                    <input type="text" id="booking_phone" placeholder="Phone Number" required />
+                    <label for="booking_email">Email Address</label>
+                    <input type="email" id="booking_email" placeholder="Email Address" required />
+                    <label for="booking_arrival">Arrival Date</label>
+                    <input type="date" id="booking_arrival" required />
+                    <label for="booking_departure">Departure Date</label>
+                    <input type="date" id="booking_departure" required />
+                    <label for="booking_hotel">Hotel Name</label>
+                    <input type="text" id="booking_hotel" placeholder="Hotel Name" required />
+                    <label for="booking_people">Number of People</label>
+                    <input type="number" id="booking_people" placeholder="Number of People" required />
+                    <label for="booking_accommodation">Accommodation</label>
+                    <select id="booking_accommodation" required>
+                        <option value="">Select Accommodation</option>
+                        <option value="All Inclusive">All Inclusive</option>
+                        <option value="Half Board">Half Board</option>
+                        <option value="Breakfast Only">Breakfast Only</option>
+                    </select>
+                    <label for="booking_nationality">Nationality</label>
+                    <input type="text" id="booking_nationality" placeholder="Nationality" required />
+                    <label for="booking_excursions">Excursions (Multi-select)</label>
+                    <select id="booking_excursions" multiple size="8">
+                        <optgroup label="Sharm El Sheikh">
+                            <option value="Safari">Safari</option>
+                            <option value="Parasailing">Parasailing</option>
+                            <option value="Submarine">Submarine</option>
+                            <option value="Bay Dream Yacht">Bay Dream Yacht</option>
+                            <option value="Bedouin Dinner">Bedouin Dinner</option>
+                            <option value="Jeep Safari">Jeep Safari</option>
+                            <option value="Banana Boat">Banana Boat</option>
+                            <option value="Camel Ride">Camel Ride</option>
+                        </optgroup>
+                        <optgroup label="Hurghada">
+                            <option value="Giftun Island">Giftun Island</option>
+                            <option value="Submarine">Submarine</option>
+                            <option value="Super Safari">Super Safari</option>
+                            <option value="Parasailing">Parasailing</option>
+                            <option value="Dolphin Show">Dolphin Show</option>
+                        </optgroup>
+                        <optgroup label="Cairo">
+                            <option value="Giza Pyramids">Giza Pyramids</option>
+                            <option value="Egyptian Museum">Egyptian Museum</option>
+                            <option value="Nile Dinner Cruise">Nile Dinner Cruise</option>
+                            <option value="Khan El Khalili">Khan El Khalili</option>
+                        </optgroup>
+                        <optgroup label="Luxor & Aswan">
+                            <option value="Karnak Temple">Karnak Temple</option>
+                            <option value="Valley of the Kings">Valley of the Kings</option>
+                            <option value="Hatshepsut Temple">Hatshepsut Temple</option>
+                        </optgroup>
+                        <optgroup label="Siwa Oasis">
+                            <option value="Salt Lakes">Salt Lakes</option>
+                            <option value="Mountain of the Dead">Mountain of the Dead</option>
+                            <option value="Cleopatra Spring">Cleopatra Spring</option>
+                            <option value="Temple of Amun">Temple of Amun</option>
+                        </optgroup>
+                        <optgroup label="Marsa Alam">
+                            <option value="Sharm El Luli">Sharm El Luli</option>
+                            <option value="Dolphin House">Dolphin House</option>
+                            <option value="Desert Safari">Desert Safari</option>
+                        </optgroup>
+                        <optgroup label="Alexandria">
+                            <option value="Qaitbay Citadel">Qaitbay Citadel</option>
+                            <option value="Bibliotheca Alexandrina">Bibliotheca Alexandrina</option>
+                            <option value="Montaza Gardens">Montaza Gardens</option>
+                        </optgroup>
+                    </select>
+                    <label for="booking_price">Package Price</label>
+                    <input type="number" id="booking_price" placeholder="Package Price" step="0.01" required />
+                    <label for="booking_paymentMethod">Payment Method</label>
+                    <select id="booking_paymentMethod" required>
+                        <option value="">Select Payment Method</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Card">Card</option>
+                        <option value="Transfer">Bank Transfer</option>
+                    </select>
+                    <label for="booking_comment">Comments</label>
+                    <textarea id="booking_comment" placeholder="Comments"></textarea>
+                    <button type="submit">Save Booking</button>
+                    <button type="button" class="cancel" onclick="document.getElementById('packageBookingFormContainer').style.display='none'; renderSalesFirebaseBookingsTable();">Cancel</button>
+                </form>
+            </div>
+            <div id="bookingDetailsView" class="details-view" style="display:none;">
+                <h3>Booking Details <span id="viewSalesBookingFirebaseIdDisplay"></span></h3>
+                <p><strong>Firebase Doc ID:</strong> <span id="viewSalesBookingFirebaseId"></span></p>
+                <p><strong>Client Name:</strong> <span id="viewSalesBookingClientName"></span></p>
+                <p><strong>Phone:</strong> <span id="viewSalesBookingPhone"></span></p>
+                <p><strong>Email:</strong> <span id="viewSalesBookingEmail"></span></p>
+                <p><strong>Arrival:</strong> <span id="viewSalesBookingArrival"></span></p>
+                <p><strong>Departure:</strong> <span id="viewSalesBookingDeparture"></span></p>
+                <p><strong>Hotel:</strong> <span id="viewSalesBookingHotel"></span></p>
+                <p><strong>People:</strong> <span id="viewSalesBookingPeople"></span></p>
+                <p><strong>Accommodation:</strong> <span id="viewSalesBookingAccommodation"></span></p>
+                <p><strong>Nationality:</strong> <span id="viewSalesBookingNationality"></span></p>
+                <p><strong>Excursions:</strong> <span id="viewSalesBookingExcursions"></span></p>
+                <p><strong>Price:</strong> <span id="viewSalesBookingPrice"></span></p>
+                <p><strong>Payment Method:</strong> <span id="viewSalesBookingPaymentMethod"></span></p>
+                <p><strong>Comments:</strong> <span id="viewSalesBookingComment"></span></p>
+                <p><strong>Status:</strong> <span id="viewSalesBookingStatus" style="font-weight: bold;"></span></p>
+                <button class="action-btn convert" onclick="generateAndShareSalesBookingPDF();">Generate & Share PDF</button>
+                <button class="action-btn cancel" onclick="document.getElementById('bookingDetailsView').style.display='none'; renderSalesFirebaseBookingsTable();">Back to Bookings</button>
+                <div style="margin-top: 20px;">
+                    <a href="#" id="whatsappShare" target="_blank" class="action-btn" style="display:none; background:#25D366;">Share via WhatsApp</a>
+                    <a href="#" id="emailShare" target="_blank" class="action-btn" style="display:none; background:#0072c6;">Share via Email</a>
+                </div>
+            </div>
+        `,
+        sales_report_firebase: `
+            <h2>Sales Report (Firebase Data)</h2>
+            <p>Total Packages: <span id="totalFirebasePackages">0</span></p>
+            <p>Total People: <span id="totalFirebasePeople">0</span></p>
+            <p>Total Revenue: <span id="totalFirebaseRevenue">$0</span></p>
+            <h3>Recent Bookings</h3>
+            <table id="firebaseRecentBookingsTable" aria-label="Recent Firebase Bookings">
+                <thead>
+                    <tr><th>Client</th><th>Main Service</th><th>Price</th><th>Arrival Date</th></tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        `,
+
+        // --- OPERATIONS SECTIONS ---
+        operations_dashboard: () => `
+            <div class="welcome-message">
+                <p>Welcome, <strong>${loggedInUser.name}</strong>! This is your Operations Dashboard.</p>
+            </div>
+            <h2>Operations Overview</h2>
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-calendar-check"></i></div>
+                    <h3>Upcoming Bookings</h3>
+                    <p>${bookingsData.filter(b => b.status === 'Confirmed' && new Date(b.date) >= new Date()).length}</p>
+                </div>
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-person-hiking"></i></div>
+                    <h3>Available Guides</h3>
+                    <p>${tourGuidesData.filter(g => g.status === 'Active').length}</p>
+                </div>
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-car"></i></div>
+                    <h3>Available Vehicles</h3>
+                    <p>${vehiclesData.filter(v => v.status === 'Available').length}</p>
+                </div>
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-hourglass-half"></i></div>
+                    <h3>Pending Assignments</h3>
+                    <p>${bookingsData.filter(b => b.status === 'Pending Guide' || b.status === 'Pending Transfer').length}</p>
+                </div>
+            </div>
+            <h3>Quick Actions</h3>
+            <ul>
+                <li><a href="#" onclick="loadSection('manage_bookings'); return false;">Manage Bookings</a></li>
+                <li><a href="#" onclick="loadSection('manage_guides'); return false;">Manage Tour Guides</a></li>
+                <li><a href="#" onclick="loadSection('manage_vehicles'); return false;">Manage Vehicles</a></li>
+            </ul>
+        `,
+        manage_bookings: `
+            <h2>Manage Bookings (Mock Data - Operations will get Firebase Integration)</h2>
+            <p>Operations can assign guides and transfers to bookings.</p>
+            <table id="opsBookingsTable" aria-label="Operations Bookings Table">
+                <thead>
+                    <tr><th>Booking ID</th><th>Client</th><th>Service</th><th>Date</th><th>Status</th><th>Guide</th><th>Transfer</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            <div id="opsBookingFormContainer" class="form-container" style="display:none;">
+                <h3>Assign Guide/Transfer</h3>
+                <form id="opsBookingForm">
+                    <input type="hidden" id="ops_booking_id" />
+                    <p><strong>Client:</strong> <span id="ops_client_name"></span></p>
+                    <p><strong>Service:</strong> <span id="ops_service"></span></p>
+                    <p><strong>Current Status:</strong> <span id="ops_current_status" style="font-weight: bold;"></span></p>
+
+                    <label for="ops_assigned_guide">Assign Tour Guide</label>
+                    <select id="ops_assigned_guide">
+                        <option value="">-- Select Guide --</option>
+                        ${tourGuidesData.map(g => `<option value="${g.name}">${g.name} (${g.status})</option>`).join('')}
+                    </select>
+
+                    <label for="ops_assigned_transfer">Assign Transfer Vehicle/Driver</label>
+                    <select id="ops_assigned_transfer">
+                        <option value="">-- Select Driver/Vehicle --</option>
+                        ${vehiclesData.map(v => `<option value="${v.driver}">${v.driver} (${v.plate} - ${v.status})</option>`).join('')}
+                    </select>
+
+                    <label for="ops_booking_status">Update Status</label>
+                    <select id="ops_booking_status">
+                        <option value="Confirmed">Confirmed</option>
+                        <option value="Pending Guide">Pending Guide</option>
+                        <option value="Pending Transfer">Pending Transfer</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                    <button type="submit">Update Booking</button>
+                    <button type="button" class="cancel" onclick="document.getElementById('opsBookingFormContainer').style.display='none'; renderOpsBookingsTable();">Cancel</button>
+                </form>
+            </div>
+        `,
+        manage_guides: `
+            <h2>Manage Tour Guides</h2>
+            <button id="addGuideBtn" class="action-btn add-btn">+ Add New Guide</button>
+            <table id="guidesTable" aria-label="Tour Guides Table">
+                <thead>
+                    <tr><th>Name</th><th>Specialization</th><th>Phone</th><th>Status</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            <div id="guideFormContainer" class="form-container" style="display:none;">
+                <h3>Add/Edit Tour Guide</h3>
+                <form id="guideForm">
+                    <input type="hidden" id="guide_id" />
+                    <label for="guide_name">Name</label>
+                    <input type="text" id="guide_name" required />
+                    <label for="guide_specialization">Specialization</label>
+                    <input type="text" id="guide_specialization" />
+                    <label for="guide_phone">Phone</label>
+                    <input type="text" id="guide_phone" />
+                    <label for="guide_status">Status</label>
+                    <select id="guide_status">
+                        <option value="Active">Active</option>
+                        <option value="On Leave">On Leave</option>
+                    </select>
+                    <button type="submit">Save Guide</button>
+                    <button type="button" class="cancel" onclick="document.getElementById('guideFormContainer').style.display='none'; renderGuidesTable();">Cancel</button>
+                </form>
+            </div>
+        `,
+        manage_vehicles: `
+                        <h2>Manage Vehicles</h2>
+            <button id="addVehicleBtn" class="action-btn add-btn">+ Add New Vehicle</button>
+            <table id="vehiclesTable" aria-label="Vehicles Table">
+                <thead>
+                    <tr><th>Plate</th><th>Type</th><th>Capacity</th><th>Driver</th><th>Status</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            <div id="vehicleFormContainer" class="form-container" style="display:none;">
+                <h3>Add/Edit Vehicle</h3>
+                <form id="vehicleForm">
+                    <input type="hidden" id="vehicle_id" />
+                    <label for="vehicle_plate">Plate Number</label>
+                    <input type="text" id="vehicle_plate" required />
+                    <label for="vehicle_type">Type</label>
+                    <input type="text" id="vehicle_type" />
+                    <label for="vehicle_capacity">Capacity</label>
+                    <input type="number" id="vehicle_capacity" />
+                    <label for="vehicle_driver">Assigned Driver</label>
+                    <input type="text" id="vehicle_driver" />
+                    <label for="vehicle_status">Status</label>
+                    <select id="vehicle_status">
+                        <option value="Available">Available</option>
+                        <option value="Booked">Booked</option>
+                        <option value="Maintenance">Maintenance</option>
+                    </select>
+                    <button type="submit">Save Vehicle</button>
+                    <button type="button" class="cancel" onclick="document.getElementById('vehicleFormContainer').style.display='none'; renderVehiclesTable();">Cancel</button>
+                </form>
+            </div>
+        `,
+        operational_reports: `
+            <h2>Operational Reports</h2>
+            <p>Generate reports related to tour guide and vehicle assignments, availability, and tour completion rates.</p>
+            <ul>
+                <li><a href="#" download="guide_schedule.pdf">Guide Schedule Report</a></li>
+                <li><a href="#" download="vehicle_utilization.pdf">Vehicle Utilization Report</a></li>
+                <li><a href="#" download="booking_completion.pdf">Booking Completion Rates</a></li>
+            </ul>
+        `,
+
+        // --- TOUR GUIDE SECTIONS ---
+        guide_dashboard: () => `
+            <div class="welcome-message">
+                <p>Hello, <strong>${loggedInUser.name}</strong>! Here's your current tour schedule.</p>
+            </div>
+            <h2>My Upcoming Tours</h2>
+            <table id="guideUpcomingToursTable" aria-label="Upcoming Tours Table">
+                <thead>
+                    <tr><th>Booking ID</th><th>Client Name</th><th>Service</th><th>Date</th><th>Status</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            <h3>Quick Actions</h3>
+            <ul>
+                <li><a href="#" onclick="loadSection('guide_past_tours'); return false;">View Past Tours</a></li>
+            </ul>
+        `,
+        guide_past_tours: () => `
+            <h2>My Past Tours</h2>
+            <table id="guidePastToursTable" aria-label="Past Tours Table">
+                <thead>
+                    <tr><th>Booking ID</th><th>Client Name</th><th>Service</th><th>Date</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        `,
+
+        // --- TRANSFER SECTIONS ---
+        transfer_dashboard: () => `
+            <div class="welcome-message">
+                <p>Hello, <strong>${loggedInUser.name}</strong>! Here's your transfer schedule.</p>
+            </div>
+            <h2>My Upcoming Transfers</h2>
+            <table id="transferUpcomingTable" aria-label="Upcoming Transfers Table">
+                <thead>
+                    <tr><th>Booking ID</th><th>Client Name</th><th>Service</th><th>Date</th><th>Vehicle</th><th>Status</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            <h3>Quick Actions</h3>
+            <ul>
+                <li><a href="#" onclick="loadSection('transfer_history'); return false;">View Transfer History</a></li>
+            </ul>
+        `,
+        transfer_history: () => `
+            <h2>My Transfer History</h2>
+            <table id="transferHistoryTable" aria-label="Transfer History Table">
+                <thead>
+                    <tr><th>Booking ID</th><th>Client Name</th><th>Service</th><th>Date</th><th>Vehicle</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        `,
+
+        // --- ACCOUNTING SECTIONS ---
+        accounting_dashboard: () => `
+            <div class="welcome-message">
+                <p>Welcome, <strong>${loggedInUser.name}</strong>! This is your Accounting Overview.</p>
+            </div>
+            <h2>Accounting Dashboard Summary</h2>
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-money-bill-wave"></i></div>
+                    <h3>Total Income (Mock)</h3>
+                    <p>$<span id="totalIncomeMock">0</span></p>
+                </div>
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-money-check-alt"></i></div>
+                    <h3>Total Expenses (Mock)</h3>
+                    <p>$<span id="totalExpensesMock">0</span></p>
+                </div>
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-receipt"></i></div>
+                    <h3>Pending Invoices (Mock)</h3>
+                    <p>${transactionsData.filter(t => t.status === 'Pending' && t.type === 'Income').length}</p>
+                </div>
+                <div class="dashboard-card">
+                    <div class="icon"><i class="fas fa-funnel-dollar"></i></div>
+                    <h3>Net Profit (Mock)</h3>
+                    <p>$<span id="netProfitMock">0</span></p>
+                </div>
+            </div>
+            <h3>Quick Actions</h3>
+            <ul>
+                <li><a href="#" onclick="loadSection('transactions'); return false;">Manage Transactions</a></li>
+                <li><a href="#" onclick="loadSection('invoices'); return false;">View Invoices</a></li>
+            </ul>
+        `,
+        transactions: `
+            <h2>Transactions Management</h2>
+            <button id="addTransactionBtn" class="action-btn add-btn">+ Add New Transaction</button>
+            <table id="transactionsTable" aria-label="Transactions Table">
+                <thead>
+                    <tr><th>TRX ID</th><th>Type</th><th>Description</th><th>Amount</th><th>Date</th><th>Status</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            <div id="transactionFormContainer" class="form-container" style="display:none;">
+                <h3>Add/Edit Transaction</h3>
+                <form id="transactionForm">
+                    <input type="hidden" id="transaction_id" />
+                    <label for="transaction_type">Type</label>
+                    <select id="transaction_type" required>
+                        <option value="Income">Income</option>
+                        <option value="Expense">Expense</option>
+                    </select>
+                    <label for="transaction_description">Description</label>
+                    <input type="text" id="transaction_description" required />
+                    <label for="transaction_amount">Amount</label>
+                    <input type="number" id="transaction_amount" step="0.01" required />
+                    <label for="transaction_date">Date</label>
+                    <input type="date" id="transaction_date" required />
+                    <label for="transaction_status">Status</label>
+                    <select id="transaction_status" required>
+                        <option value="Paid">Paid</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Overdue">Overdue</option>
+                    </select>
+                    <button type="submit">Save Transaction</button>
+                    <button type="button" class="cancel" onclick="document.getElementById('transactionFormContainer').style.display='none'; renderTransactionsTable();">Cancel</button>
+                </form>
+            </div>
+        `,
+        invoices: `
+            <h2>Invoices</h2>
+            <p>List of generated invoices (represented by Income transactions).</p>
+            <table id="invoicesTable" aria-label="Invoices Table">
+                <thead>
+                    <tr><th>Invoice ID (TRX ID)</th><th>Client/Description</th><th>Amount</th><th>Date Issued</th><th>Status</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            <div id="invoiceDetailsView" class="details-view" style="display:none;">
+                <h3>Invoice Details <span id="viewInvoiceId"></span></h3>
+                <p><strong>Transaction ID:</strong> <span id="viewInvoiceTrxId"></span></p>
+                <p><strong>Description:</strong> <span id="viewInvoiceDescription"></span></p>
+                <p><strong>Amount:</strong> <span id="viewInvoiceAmount"></span></p>
+                <p><strong>Date:</strong> <span id="viewInvoiceDate"></span></p>
+                <p><strong>Status:</strong> <span id="viewInvoiceStatus" style="font-weight: bold;"></span></p>
+                <button class="action-btn convert" onclick="generateInvoicePDF();">Generate PDF Invoice</button>
+                <button class="action-btn cancel" onclick="document.getElementById('invoiceDetailsView').style.display='none'; renderInvoicesTable();">Back to Invoices</button>
+            </div>
+        `,
+        financial_reports: `
+            <h2>Financial Reports</h2>
+            <p>Detailed financial statements and summaries.</p>
+            <ul>
+                <li><a href="#" download="income_statement.pdf">Income Statement</a></li>
+                <li><a href="#" download="cash_flow.pdf">Cash Flow Report</a></li>
+                <li><a href="#" download="expense_breakdown.pdf">Expense Breakdown</a></li>
+            </ul>
+        `,
+    };
+
+    // --- Core Application Logic (continuation) ---
+
+    // Function to load content based on section name
+    function loadSection(sectionName) {
+        if (!loggedInUser) {
+            console.error("No user logged in.");
+            return;
+        }
+
+        const sectionContent = pageContent[sectionName];
+        if (typeof sectionContent === 'function') {
+            mainContentArea.innerHTML = sectionContent();
+        } else if (typeof sectionContent === 'string') {
+            mainContentArea.innerHTML = sectionContent;
+        } else {
+            mainContentArea.innerHTML = `<h2>Section Not Found</h2><p>The requested section '${sectionName}' could not be loaded.</p>`;
+            return;
+        }
+
+        // Call specific rendering functions after content is loaded
+        switch (sectionName) {
+            case 'admin_dashboard':
+                updateAdminDashboardMetrics();
+                break;
+            case 'manage_users':
+                renderUsersTable();
+                document.getElementById('addAdminUserBtn').onclick = () => showUserForm();
+                document.getElementById('userForm').onsubmit = handleUserFormSubmit;
+                break;
+            case 'manage_all_bookings':
+                renderAllFirebaseBookingsTable();
+                break;
+            case 'sales_dashboard':
+                updateSalesDashboardMetrics();
+                break;
+            case 'leads':
+                renderLeadsTable();
+                document.getElementById('addLeadBtn').onclick = () => showLeadForm();
+                document.getElementById('leadForm').onsubmit = handleLeadFormSubmit;
+                break;
+            case 'sales_bookings':
+                renderSalesFirebaseBookingsTable();
+                document.getElementById('addPackageBookingBtn').onclick = () => showPackageBookingForm();
+                document.getElementById('packageBookingForm').onsubmit = handlePackageBookingFormSubmit;
+                break;
+            case 'sales_report_firebase':
+                generateSalesReport();
+                break;
+            case 'operations_dashboard':
+                // No specific render needed, values are static mock for now
+                break;
+            case 'manage_bookings':
+                renderOpsBookingsTable();
+                document.getElementById('opsBookingForm').onsubmit = handleOpsBookingFormSubmit;
+                break;
+            case 'manage_guides':
+                renderGuidesTable();
+                document.getElementById('addGuideBtn').onclick = () => showGuideForm();
+                document.getElementById('guideForm').onsubmit = handleGuideFormSubmit;
+                break;
+            case 'manage_vehicles':
+                renderVehiclesTable();
+                document.getElementById('addVehicleBtn').onclick = () => showVehicleForm();
+                document.getElementById('vehicleForm').onsubmit = handleVehicleFormSubmit;
+                break;
+            case 'guide_dashboard':
+                renderGuideUpcomingTours();
+                break;
+            case 'guide_past_tours':
+                renderGuidePastTours();
+                break;
+            case 'transfer_dashboard':
+                renderTransferUpcoming();
+                break;
+            case 'transfer_history':
+                renderTransferHistory();
+                break;
+            case 'accounting_dashboard':
+                updateAccountingDashboardMetrics();
+                break;
+            case 'transactions':
+                renderTransactionsTable();
+                document.getElementById('addTransactionBtn').onclick = () => showTransactionForm();
+                document.getElementById('transactionForm').onsubmit = handleTransactionFormSubmit;
+                break;
+            case 'invoices':
+                renderInvoicesTable();
+                break;
+            // No specific post-load actions needed for simple report pages
+            case 'system_reports':
+            case 'operational_reports':
+            case 'financial_reports':
+                break;
+            default:
+                console.warn(`No specific post-load function for section: ${sectionName}`);
+        }
+    }
+
+
+    // --- Authentication ---
+    loginBtn.addEventListener('click', () => {
+        const username = usernameInput.value;
+        const password = passwordInput.value;
+        const user = users[username];
+
+        if (user && user.password === password) {
+            loggedInUser = user;
+            loginPage.style.display = 'none';
+            appContainer.style.display = 'flex';
+            headerUserName.textContent = loggedInUser.name;
+            setupSidebar(loggedInUser.role);
+            loadSection(roleSidebars[loggedInUser.role][0].section); // Load first section for the role
+            loginError.textContent = ''; // Clear any previous error
+        } else {
+            loginError.textContent = 'Invalid username or password.';
+        }
+    });
+
+    function setupSidebar(role) {
+        sidebar.innerHTML = ''; // Clear existing buttons
+        const navItems = roleSidebars[role];
+
+        navItems.forEach(item => {
+            const button = document.createElement('button');
+            button.className = 'sidebar-button';
+            button.setAttribute('aria-label', item.tooltip);
+            button.innerHTML = `<i class="${item.icon}"></i><span class="tooltip">${item.tooltip}</span>`;
+            button.onclick = () => {
+                // Remove active class from all buttons
+                document.querySelectorAll('.sidebar-button').forEach(btn => btn.classList.remove('active'));
+                // Add active class to the clicked button
+                button.classList.add('active');
+                loadSection(item.section);
+            };
+            sidebar.appendChild(button);
+        });
+
+        // Add logout button at the bottom
+        const logoutButton = document.createElement('button');
+        logoutButton.className = 'logout-button';
+        logoutButton.setAttribute('aria-label', 'Logout');
+        logoutButton.innerHTML = `<i class="fas fa-sign-out-alt"></i><span class="tooltip">Logout</span>`;
+        logoutButton.onclick = logout;
+        sidebar.appendChild(logoutButton);
+
+        // Set the first item as active by default
+        if (navItems.length > 0) {
+            sidebar.querySelector('.sidebar-button').classList.add('active');
+        }
+    }
+
+    function logout() {
+        loggedInUser = null;
+        appContainer.style.display = 'none';
+        loginPage.style.display = 'flex';
+        usernameInput.value = '';
+        passwordInput.value = '';
+        mainContentArea.innerHTML = ''; // Clear content
+    }
+
+    // --- Modals ---
+    function openModal(content) {
+        modalContent.innerHTML = content;
+        overlay.style.display = 'block';
+        clientModal.style.display = 'block';
+    }
+
+    function closeModal() {
+        overlay.style.display = 'none';
+        clientModal.style.display = 'none';
+        modalContent.innerHTML = ''; // Clear content
+        // Hide share buttons when modal closes
+        document.getElementById('whatsappShare').style.display = 'none';
+        document.getElementById('emailShare').style.display = 'none';
+    }
+
+
+    // --- Admin Functions ---
+    // User Management
+    function renderUsersTable() {
+        const tableBody = document.querySelector('#usersTable tbody');
+        tableBody.innerHTML = ''; // Clear existing rows
+        Object.values(users).forEach(user => {
+            const row = tableBody.insertRow();
+            row.insertCell().textContent = user.username;
+            row.insertCell().textContent = user.name;
+            row.insertCell().textContent = user.role;
+            const actionsCell = row.insertCell();
+            actionsCell.appendChild(createActionButton('Edit', 'edit', () => showUserForm(user)));
+            actionsCell.appendChild(createActionButton('Delete', 'delete', () => deleteUser(user.username)));
+        });
+        document.getElementById('userFormContainer').style.display = 'none';
+    }
+
+    function showUserForm(user = {}) {
+        document.getElementById('userFormContainer').style.display = 'block';
+        setVal('user_original_username', user.username || ''); // Store original username for updates
+        setVal('user_username', user.username || '');
+        setVal('user_password', user.password || ''); // Note: In a real app, never pre-fill password for edit
+        setVal('user_name', user.name || '');
+        setVal('user_role', user.role || '');
+        document.getElementById('user_username').readOnly = !!user.username; // Prevent editing username on existing users
+    }
+
+    function handleUserFormSubmit(event) {
+        event.preventDefault();
+        const originalUsername = getVal('user_original_username');
+        const username = getVal('user_username');
+        const password = getVal('user_password');
+        const name = getVal('user_name');
+        const role = getVal('user_role');
+
+        if (!username || !password || !name || !role) {
+            alert('Please fill all required fields.');
+            return;
+        }
+
+        if (originalUsername && users[originalUsername] && originalUsername !== username) {
+            // Username changed, delete old user and create new
+            delete users[originalUsername];
+        }
+
+        users[username] = { username, password, role, name };
+        alert(`User ${username} saved successfully!`);
+        renderUsersTable();
+        document.getElementById('userFormContainer').style.display = 'none';
+    }
+
+    function deleteUser(usernameToDelete) {
+        if (confirm(`Are you sure you want to delete user ${usernameToDelete}?`)) {
+            if (usernameToDelete === loggedInUser.username) {
+                alert("You cannot delete your own account while logged in.");
+                return;
+            }
+            delete users[usernameToDelete];
+            alert(`User ${usernameToDelete} deleted.`);
+            renderUsersTable();
+        }
+    }
+
+    async function updateAdminDashboardMetrics() {
+        try {
+            // Total Bookings (Firebase)
+            const clientsSnapshot = await db.collection('clients').get();
+            document.getElementById('adminTotalFirebaseBookings').textContent = clientsSnapshot.size;
+
+            // Total Income (Firebase) - sum prices from clients collection
+            let totalIncome = 0;
+            clientsSnapshot.forEach(doc => {
+                const data = doc.data();
+                if (data.price) {
+                    totalIncome += parseFloat(data.price);
+                }
+            });
+            document.getElementById('adminTotalFirebaseIncome').textContent = `$${totalIncome.toFixed(2)}`;
+        } catch (error) {
+            console.error("Error updating admin dashboard metrics:", error);
+            document.getElementById('adminTotalFirebaseBookings').textContent = 'Error';
+            document.getElementById('adminTotalFirebaseIncome').textContent = 'Error';
+        }
+    }
+
+    // All Bookings Overview (Firebase)
+    async function renderAllFirebaseBookingsTable() {
+        const tableBody = document.querySelector('#allBookingsTable tbody');
+        tableBody.innerHTML = '<tr><td colspan="7">Loading bookings...</td></tr>'; // Loading message
+        document.getElementById('allBookingDetailsView').style.display = 'none';
+
+        try {
+            const clientsRef = db.collection('clients');
+            const snapshot = await clientsRef.get();
+            tableBody.innerHTML = ''; // Clear loading message
+
+            if (snapshot.empty) {
+                tableBody.innerHTML = '<tr><td colspan="7">No bookings found.</td></tr>';
+                return;
+            }
+
+            snapshot.forEach(doc => {
+                const booking = { id: doc.id, ...doc.data() };
+                const row = tableBody.insertRow();
+                row.insertCell().textContent = booking.id;
+                row.insertCell().textContent = booking.name;
+                row.insertCell().textContent = booking.excursions ? booking.excursions.join(', ') : 'N/A'; // Main service from excursions
+                row.insertCell().textContent = booking.arrival;
+                const statusCell = row.insertCell();
+                statusCell.textContent = booking.status || 'Confirmed'; // Default to Confirmed if not set
+                statusCell.style.color = getStatusColor(statusCell.textContent);
+                row.insertCell().textContent = booking.salesAgent || 'N/A';
+
+                const actionsCell = row.insertCell();
+                actionsCell.appendChild(createActionButton('View', 'view', () => viewAllBookingDetails(booking)));
+            });
+        } catch (error) {
+            console.error("Error rendering all Firebase bookings:", error);
+            tableBody.innerHTML = '<tr><td colspan="7">Error loading bookings.</td></tr>';
+        }
+    }
+
+    function viewAllBookingDetails(booking) {
+        document.getElementById('allBookingsTable').parentNode.style.display = 'none'; // Hide table
+        document.getElementById('allBookingDetailsView').style.display = 'block';
+
+        setVal('viewBookingFirebaseIdDisplay', booking.id);
+        setVal('viewBookingFirebaseId', booking.id);
+        setVal('viewBookingClientName', booking.name);
+        setVal('viewBookingPhone', booking.phone || 'N/A');
+        setVal('viewBookingEmail', booking.email || 'N/A');
+        setVal('viewBookingArrival', booking.arrival);
+        setVal('viewBookingDeparture', booking.departure);
+        setVal('viewBookingHotel', booking.hotel);
+        setVal('viewBookingPeople', booking.people);
+        setVal('viewBookingAccommodation', booking.accommodation);
+        setVal('viewBookingNationality', booking.nationality);
+        setVal('viewBookingExcursions', booking.excursions ? booking.excursions.join(', ') : 'None');
+        setVal('viewBookingPrice', `$${parseFloat(booking.price || 0).toFixed(2)}`);
+        setVal('viewBookingPaymentMethod', booking.paymentMethod || 'N/A');
+        setVal('viewBookingComment', booking.comment || 'No comments.');
+        setVal('viewBookingSalesAgent', booking.salesAgent || 'N/A');
+        const statusElement = document.getElementById('viewBookingStatus');
+        statusElement.textContent = booking.status || 'Confirmed';
+        statusElement.style.color = getStatusColor(statusElement.textContent);
+        setVal('viewBookingGuide', booking.assignedGuide || 'N/A');
+        setVal('viewBookingTransfer', booking.assignedTransfer || 'N/A');
+    }
+
+    // --- Sales Functions ---
+    async function updateSalesDashboardMetrics() {
+        try {
+            const clientsRef = db.collection('clients');
+            const myBookingsSnapshot = await clientsRef.where('salesAgent', '==', loggedInUser.name).get();
+
+            let confirmedBookings = 0;
+            let totalSalesValue = 0;
+
+            myBookingsSnapshot.forEach(doc => {
+                const data = doc.data();
+                if (data.status === 'Confirmed') {
+                    confirmedBookings++;
+                }
+                if (data.price) {
+                    totalSalesValue += parseFloat(data.price);
+                }
+            });
+
+            document.getElementById('salesFirebaseConfirmedBookings').textContent = confirmedBookings;
+            document.getElementById('salesFirebaseTotalSalesValue').textContent = `$${totalSalesValue.toFixed(2)}`;
+        } catch (error) {
+            console.error("Error updating sales dashboard metrics:", error);
+            document.getElementById('salesFirebaseConfirmedBookings').textContent = 'Error';
+            document.getElementById('salesFirebaseTotalSalesValue').textContent = 'Error';
+        }
+    }
+
+    // Leads Management (Mock Data)
+    function renderLeadsTable() {
+        const tableBody = document.querySelector('#leadsTable tbody');
+        tableBody.innerHTML = '';
+        const myLeads = leadsData.filter(lead => lead.salesAgent === loggedInUser.name || loggedInUser.role === 'admin');
+
+        myLeads.forEach(lead => {
+            const row = tableBody.insertRow();
+            row.insertCell().textContent = lead.id;
+            row.insertCell().textContent = lead.clientName;
+            row.insertCell().textContent = lead.service;
+            const statusCell = row.insertCell();
+            statusCell.textContent = lead.status;
+            statusCell.style.color = getStatusColor(lead.status);
+            row.insertCell().textContent = lead.contact;
+            const actionsCell = row.insertCell();
+            actionsCell.appendChild(createActionButton('View', 'view', () => viewLeadDetails(lead)));
+            actionsCell.appendChild(createActionButton('Edit', 'edit', () => showLeadForm(lead)));
+            if (lead.status !== 'Converted' && lead.status !== 'Lost') {
+                actionsCell.appendChild(createActionButton('Convert', 'convert', () => convertLeadToBooking(lead.id)));
+            }
+            actionsCell.appendChild(createActionButton('Delete', 'delete', () => deleteLead(lead.id)));
+        });
+        document.getElementById('leadFormContainer').style.display = 'none';
+        document.getElementById('leadDetailsView').style.display = 'none';
+    }
+
+    function showLeadForm(lead = {}) {
+        document.getElementById('leadFormContainer').style.display = 'block';
+        setVal('lead_id', lead.id || '');
+        setVal('lead_client_name', lead.clientName || '');
+        setVal('lead_service', lead.service || '');
+        setVal('lead_contact', lead.contact || '');
+        setVal('lead_status', lead.status || 'New');
+    }
+
+    function handleLeadFormSubmit(event) {
+        event.preventDefault();
+        const id = getVal('lead_id');
+        const clientName = getVal('lead_client_name');
+        const service = getVal('lead_service');
+        const contact = getVal('lead_contact');
+        const status = getVal('lead_status');
+
+        if (!clientName || !service || !contact || !status) {
+            alert('Please fill all required fields.');
+            return;
+        }
+
+        if (id) {
+            // Edit existing lead
+            const index = leadsData.findIndex(l => l.id === id);
+            if (index !== -1) {
+                leadsData[index] = { ...leadsData[index], clientName, service, contact, status };
+                alert('Lead updated successfully!');
+            }
+        } else {
+            // Add new lead
+            const newId = generateUniqueId('L');
+            leadsData.push({ id: newId, clientName, service, contact, status, salesAgent: loggedInUser.name });
+            alert('New lead added successfully!');
+        }
+        renderLeadsTable();
+        document.getElementById('leadFormContainer').style.display = 'none';
+    }
+
+    function deleteLead(idToDelete) {
+        if (confirm(`Are you sure you want to delete lead ${idToDelete}?`)) {
+            leadsData = leadsData.filter(lead => lead.id !== idToDelete);
+            alert(`Lead ${idToDelete} deleted.`);
+            renderLeadsTable();
+        }
+    }
+
+    function viewLeadDetails(lead) {
+        document.getElementById('leadsTable').parentNode.style.display = 'none'; // Hide table
+        document.getElementById('leadFormContainer').style.display = 'none'; // Hide form
+        document.getElementById('leadDetailsView').style.display = 'block';
+
+        setVal('viewLeadId', lead.id);
+        setVal('viewLeadClientName', lead.clientName);
+        setVal('viewLeadService', lead.service);
+        setVal('viewLeadContact', lead.contact);
+        const statusElement = document.getElementById('viewLeadStatus');
+        statusElement.textContent = lead.status;
+        statusElement.style.color = getStatusColor(lead.status);
+        setVal('viewLeadSalesAgent', lead.salesAgent || 'N/A');
+    }
+
+    function convertLeadToBooking(leadId) {
+        const lead = leadsData.find(l => l.id === leadId);
+        if (!lead) {
+            alert('Lead not found.');
+            return;
+        }
+
+        if (confirm(`Convert lead '${lead.clientName}' to a booking?`)) {
+            // Pre-fill the package booking form with lead data
+            loadSection('sales_bookings'); // Load the booking creation section
+            showPackageBookingForm({
+                name: lead.clientName,
+                email: lead.contact.includes('@') ? lead.contact : '', // Assume email if @ present
+                phone: !lead.contact.includes('@') ? lead.contact : '', // Assume phone otherwise
+                excursions: [lead.service], // Pre-select the service from lead
+                status: 'Confirmed' // New bookings are confirmed by default
+            });
+            // Update lead status
+            const index = leadsData.findIndex(l => l.id === leadId);
+            if (index !== -1) {
+                leadsData[index].status = 'Converted';
+                alert('Lead converted. Please complete the booking details.');
+                renderLeadsTable(); // Refresh leads table to show updated status
+            }
+        }
+    }
+
+
+    // Sales Bookings (Firebase)
+    async function renderSalesFirebaseBookingsTable() {
+        const tableBody = document.getElementById('salesBookingsTableBody');
+        tableBody.innerHTML = '<tr><td colspan="7">Loading your bookings...</td></tr>'; // Loading message
+        document.getElementById('packageBookingFormContainer').style.display = 'none';
+        document.getElementById('bookingDetailsView').style.display = 'none';
+
+        try {
+            const clientsRef = db.collection('clients');
+            const query = loggedInUser.role === 'admin'
+                          ? clientsRef // Admin sees all
+                          : clientsRef.where('salesAgent', '==', loggedInUser.name); // Sales sees their own
+
+            const snapshot = await query.get();
+            tableBody.innerHTML = ''; // Clear loading message
+
+            if (snapshot.empty) {
+                tableBody.innerHTML = '<tr><td colspan="7">No bookings found for you.</td></tr>';
+                return;
+            }
+
+            snapshot.forEach(doc => {
+                const booking = { firebaseDocId: doc.id, ...doc.data() };
+                const row = tableBody.insertRow();
+                row.insertCell().textContent = booking.name;
+                row.insertCell().textContent = booking.email;
+                row.insertCell().textContent = booking.arrival;
+                row.insertCell().textContent = booking.departure;
+                row.insertCell().textContent = `$${parseFloat(booking.price || 0).toFixed(2)}`;
+                const statusCell = row.insertCell();
+                statusCell.textContent = booking.status || 'Confirmed';
+                statusCell.style.color = getStatusColor(statusCell.textContent);
+
+                const actionsCell = row.insertCell();
+                actionsCell.appendChild(createActionButton('View', 'view', () => viewSalesBookingDetails(booking)));
+                actionsCell.appendChild(createActionButton('Edit', 'edit', () => showPackageBookingForm(booking)));
+                actionsCell.appendChild(createActionButton('Delete', 'delete', () => deletePackageBooking(booking.firebaseDocId)));
+            });
+        } catch (error) {
+            console.error("Error rendering sales Firebase bookings:", error);
+            tableBody.innerHTML = '<tr><td colspan="7">Error loading bookings.</td></tr>';
+        }
+    }
+
+    function showPackageBookingForm(booking = {}) {
+        document.getElementById('packageBookingFormContainer').style.display = 'block';
+        setVal('booking_firebase_doc_id', booking.firebaseDocId || '');
+        setVal('booking_name', booking.name || '');
+        setVal('booking_phone', booking.phone || '');
+        setVal('booking_email', booking.email || '');
+        setVal('booking_arrival', booking.arrival || '');
+        setVal('booking_departure', booking.departure || '');
+        setVal('booking_hotel', booking.hotel || '');
+        setVal('booking_people', booking.people || '');
+        setVal('booking_accommodation', booking.accommodation || '');
+        setVal('booking_nationality', booking.nationality || '');
+        setVal('booking_excursions', booking.excursions || []); // Multi-select
+        setVal('booking_price', booking.price || '');
+        setVal('booking_paymentMethod', booking.paymentMethod || '');
+        setVal('booking_comment', booking.comment || '');
+    }
+
+    async function handlePackageBookingFormSubmit(event) {
+        event.preventDefault();
+
+        const firebaseDocId = getVal('booking_firebase_doc_id');
+        const bookingData = {
+            name: getVal('booking_name'),
+            phone: getVal('booking_phone'),
+            email: getVal('booking_email'),
+            arrival: getVal('booking_arrival'),
+            departure: getVal('booking_departure'),
+            hotel: getVal('booking_hotel'),
+            people: parseInt(getVal('booking_people')),
+            accommodation: getVal('booking_accommodation'),
+            nationality: getVal('booking_nationality'),
+            excursions: getVal('booking_excursions'), // This will be an array
+            price: parseFloat(getVal('booking_price')),
+            paymentMethod: getVal('booking_paymentMethod'),
+            comment: getVal('booking_comment'),
+            salesAgent: loggedInUser.name, // Assign current sales agent
+            status: 'Confirmed' // Default status for new/edited bookings
+        };
+
+        if (Object.values(bookingData).some(val => val === '' || isNaN(val) && typeof val === 'number')) {
+            alert('Please fill all required fields correctly.');
+            return;
+        }
+
+        try {
+            if (firebaseDocId) {
+                // Update existing document
+                await db.collection('clients').doc(firebaseDocId).update(bookingData);
+                alert('Booking updated successfully!');
+            } else {
+                // Add new document
+                await db.collection('clients').add(bookingData);
+                alert('New booking created successfully!');
+            }
+            renderSalesFirebaseBookingsTable();
+            document.getElementById('packageBookingFormContainer').style.display = 'none';
+        } catch (error) {
+            console.error("Error saving booking:", error);
+            alert("Error saving booking. Check console for details.");
+        }
+    }
+
+    async function deletePackageBooking(firebaseDocId) {
+        if (confirm(`Are you sure you want to delete this booking (ID: ${firebaseDocId})?`)) {
+            try {
+                await db.collection('clients').doc(firebaseDocId).delete();
+                alert('Booking deleted successfully!');
+                renderSalesFirebaseBookingsTable();
+            } catch (error) {
+                console.error("Error deleting booking:", error);
+                alert("Error deleting booking. Check console for details.");
+            }
+        }
+    }
+
+    function viewSalesBookingDetails(booking) {
+        document.getElementById('salesBookingsTable').parentNode.style.display = 'none'; // Hide table
+        document.getElementById('packageBookingFormContainer').style.display = 'none'; // Hide form
+        document.getElementById('bookingDetailsView').style.display = 'block';
+
+        setVal('viewSalesBookingFirebaseIdDisplay', booking.firebaseDocId);
+        setVal('viewSalesBookingFirebaseId', booking.firebaseDocId);
+        setVal('viewSalesBookingClientName', booking.name);
+        setVal('viewSalesBookingPhone', booking.phone || 'N/A');
+        setVal('viewSalesBookingEmail', booking.email || 'N/A');
+        setVal('viewSalesBookingArrival', booking.arrival);
+        setVal('viewSalesBookingDeparture', booking.departure);
+        setVal('viewSalesBookingHotel', booking.hotel);
+        setVal('viewSalesBookingPeople', booking.people);
+        setVal('viewSalesBookingAccommodation', booking.accommodation);
+        setVal('viewSalesBookingNationality', booking.nationality);
+        setVal('viewSalesBookingExcursions', booking.excursions ? booking.excursions.join(', ') : 'None');
+        setVal('viewSalesBookingPrice', `$${parseFloat(booking.price || 0).toFixed(2)}`);
+        setVal('viewSalesBookingPaymentMethod', booking.paymentMethod || 'N/A');
+        setVal('viewSalesBookingComment', booking.comment || 'No comments.');
+        const statusElement = document.getElementById('viewSalesBookingStatus');
+        statusElement.textContent = booking.status || 'Confirmed';
+        statusElement.style.color = getStatusColor(statusElement.textContent);
+
+        // Show share buttons
+        document.getElementById('whatsappShare').style.display = 'inline-block';
+        document.getElementById('emailShare').style.display = 'inline-block';
+
+        // Store current booking for PDF generation and sharing
+        currentBookingForPDF = booking;
+    }
+
+    let currentBookingForPDF = null; // Variable to hold the booking data for PDF generation
+
+    async function generateAndShareSalesBookingPDF() {
+        if (!currentBookingForPDF) {
+            alert("No booking selected for PDF generation.");
+            return;
+        }
+
+        const booking = currentBookingForPDF;
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        // Add QR Code (Placeholder)
+        const qrData = `Habiby Tour Booking\nClient: ${booking.name}\nService: ${booking.excursions.join(', ')}\nArrival: ${booking.arrival}\nPrice: $${booking.price}`;
+        const qrCodeCanvas = document.createElement('canvas');
+        await QRCode.toCanvas(qrCodeCanvas, qrData, { width: 80, margin: 1 });
+        const qrCodeDataUrl = qrCodeCanvas.toDataURL('image/png');
+
+        doc.setFontSize(22);
+        doc.setTextColor(13, 189, 155); // #0dbd9b
+        doc.text("Habiby Tour - Booking Confirmation", 105, 20, null, null, "center");
+
+        doc.addImage(qrCodeDataUrl, 'PNG', 170, 5, 30, 30); // Position QR code
+
+        doc.setFontSize(12);
+        doc.setTextColor(51, 51, 51); // #333
+        doc.text(`Booking ID: ${booking.firebaseDocId}`, 20, 40);
+        doc.text(`Sales Agent: ${booking.salesAgent || 'N/A'}`, 20, 47);
+
+        doc.setDrawColor(13, 189, 155);
+        doc.line(20, 52, 190, 52); // Horizontal line
+
+        let y = 60;
+        doc.setFontSize(14);
+        doc.setTextColor(10, 163, 133); // #0aa385
+        doc.text("Client Details:", 20, y);
+        y += 7;
+        doc.setFontSize(12);
+        doc.setTextColor(51, 51, 51);
+        doc.text(`Name: ${booking.name}`, 20, y); y += 7;
+        doc.text(`Phone: ${booking.phone || 'N/A'}`, 20, y); y += 7;
+        doc.text(`Email: ${booking.email || 'N/A'}`, 20, y); y += 7;
+        doc.text(`Nationality: ${booking.nationality || 'N/A'}`, 20, y); y += 10;
+
+        doc.setFontSize(14);
+        doc.setTextColor(10, 163, 133);
+        doc.text("Travel Details:", 20, y);
+        y += 7;
+        doc.setFontSize(12);
+        doc.setTextColor(51, 51, 51);
+        doc.text(`Arrival Date: ${booking.arrival}`, 20, y); y += 7;
+        doc.text(`Departure Date: ${booking.departure}`, 20, y); y += 7;
+        doc.text(`Hotel: ${booking.hotel || 'N/A'}`, 20, y); y += 7;
+        doc.text(`Number of People: ${booking.people}`, 20, y); y += 7;
+        doc.text(`Accommodation: ${booking.accommodation || 'N/A'}`, 20, y); y += 10;
+
+        doc.setFontSize(14);
+        doc.setTextColor(10, 163, 133);
+        doc.text("Excursions/Services:", 20, y);
+        y += 7;
+        doc.setFontSize(12);
+        doc.setTextColor(51, 51, 51);
+        if (booking.excursions && booking.excursions.length > 0) {
+            booking.excursions.forEach(excursion => {
+                doc.text(`- ${excursion}`, 25, y); y += 7;
+            });
+        } else {
+            doc.text(`No specific excursions listed.`, 25, y); y += 7;
+        }
+        y += 3;
+
+        doc.setFontSize(14);
+        doc.setTextColor(10, 163, 133);
+        doc.text("Financial Summary:", 20, y);
+        y += 7;
+        doc.setFontSize(12);
+        doc.setTextColor(51, 51, 51);
+        doc.text(`Total Price: $${parseFloat(booking.price || 0).toFixed(2)}`, 20, y); y += 7;
+        doc.text(`Payment Method: ${booking.paymentMethod || 'N/A'}`, 20, y); y += 10;
+        doc.text(`Status: ${booking.status || 'Confirmed'}`, 20, y); y += 10;
+
+
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Comments: ${booking.comment || 'N/A'}`, 20, y);
+
+        const pdfBlob = doc.output('blob');
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+
+        // Offer to download
+        const a = document.createElement('a');
+        a.href = pdfUrl;
+        a.download = `HabibyTour_Booking_${booking.name.replace(/\s/g, '_')}_${booking.firebaseDocId}.pdf`;
+        a.click();
+        URL.revokeObjectURL(pdfUrl); // Clean up
+
+        // Setup share links
+        const whatsappText = encodeURIComponent(`Hi ${booking.name},\n\nHere is your booking confirmation from Habiby Tour:\n\nClient: ${booking.name}\nService: ${booking.excursions.join(', ')}\nArrival: ${booking.arrival}\nPrice: $${parseFloat(booking.price || 0).toFixed(2)}\n\nLink to booking details (if applicable): [Your CRM Public Link Here]\n\nThank you for choosing Habiby Tour!`);
+        const whatsappLink = `https://wa.me/?text=${whatsappText}`;
+        document.getElementById('whatsappShare').href = whatsappLink;
+
+        const emailSubject = encodeURIComponent(`Habiby Tour Booking Confirmation - ${booking.name}`);
+        const emailBody = encodeURIComponent(`Dear ${booking.name},\n\nPlease find attached your booking confirmation from Habiby Tour for your upcoming trip.\n\nBooking ID: ${booking.firebaseDocId}\nMain Service: ${booking.excursions.join(', ')}\nArrival Date: ${booking.arrival}\nTotal Price: $${parseFloat(booking.price || 0).toFixed(2)}\n\nWe look forward to providing you with an unforgettable experience!\n\nBest regards,\nHabiby Tour Team`);
+        const emailLink = `mailto:${booking.email}?subject=${emailSubject}&body=${emailBody}`;
+        document.getElementById('emailShare').href = emailLink;
+
+        alert("PDF generated! You can now use the WhatsApp or Email buttons to share the details.");
+    }
+
+    async function generateSalesReport() {
+        const totalPackagesElement = document.getElementById('totalFirebasePackages');
+        const totalPeopleElement = document.getElementById('totalFirebasePeople');
+        const totalRevenueElement = document.getElementById('totalFirebaseRevenue');
+        const tableBody = document.querySelector('#firebaseRecentBookingsTable tbody');
+
+        totalPackagesElement.textContent = 'Loading...';
+        totalPeopleElement.textContent = 'Loading...';
+        totalRevenueElement.textContent = 'Loading...';
+        tableBody.innerHTML = '<tr><td colspan="4">Loading recent bookings...</td></tr>';
+
+        try {
+            const clientsRef = db.collection('clients');
+            const query = loggedInUser.role === 'admin'
+                          ? clientsRef // Admin sees all
+                          : clientsRef.where('salesAgent', '==', loggedInUser.name); // Sales sees their own
+
+            const snapshot = await query.get();
+
+            let totalPackages = 0;
+            let totalPeople = 0;
+            let totalRevenue = 0;
+            const recentBookings = [];
+
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                totalPackages++;
+                totalPeople += data.people || 0;
+                totalRevenue += parseFloat(data.price || 0);
+                recentBookings.push(data);
+            });
+
+            totalPackagesElement.textContent = totalPackages;
+            totalPeopleElement.textContent = totalPeople;
+            totalRevenueElement.textContent = `$${totalRevenue.toFixed(2)}`;
+
+            // Sort recent bookings by arrival date descending
+            recentBookings.sort((a, b) => new Date(b.arrival) - new Date(a.arrival));
+
+            tableBody.innerHTML = '';
+            if (recentBookings.length > 0) {
+                recentBookings.slice(0, 10).forEach(booking => { // Show top 10 recent
+                    const row = tableBody.insertRow();
+                    row.insertCell().textContent = booking.name;
+                    row.insertCell().textContent = booking.excursions ? booking.excursions.join(', ') : 'N/A';
+                    row.insertCell().textContent = `$${parseFloat(booking.price || 0).toFixed(2)}`;
+                    row.insertCell().textContent = booking.arrival;
+                });
+            } else {
+                tableBody.innerHTML = '<tr><td colspan="4">No recent bookings found.</td></tr>';
+            }
+
+        } catch (error) {
+            console.error("Error generating sales report:", error);
+            totalPackagesElement.textContent = 'Error';
+            totalPeopleElement.textContent = 'Error';
+            totalRevenueElement.textContent = 'Error';
+            tableBody.innerHTML = '<tr><td colspan="4">Error loading report data.</td></tr>';
+        }
+    }
+
+
+    // --- Operations Functions ---
+    function renderOpsBookingsTable() {
+        const tableBody = document.querySelector('#opsBookingsTable tbody');
+        tableBody.innerHTML = '';
+        document.getElementById('opsBookingFormContainer').style.display = 'none';
+
+        bookingsData.forEach(booking => {
+            const row = tableBody.insertRow();
+            row.insertCell().textContent = booking.id;
+            row.insertCell().textContent = booking.clientName;
+            row.insertCell().textContent = booking.service;
+            row.insertCell().textContent = booking.date;
+            const statusCell = row.insertCell();
+            statusCell.textContent = booking.status;
+            statusCell.style.color = getStatusColor(booking.status);
+            row.insertCell().textContent = booking.assignedGuide || 'N/A';
+            row.insertCell().textContent = booking.assignedTransfer || 'N/A';
+
+            const actionsCell = row.insertCell();
+            actionsCell.appendChild(createActionButton('Assign/Update', 'edit', () => showOpsBookingForm(booking)));
+        });
+    }
+
+    function showOpsBookingForm(booking) {
+        document.getElementById('opsBookingFormContainer').style.display = 'block';
+        setVal('ops_booking_id', booking.id);
+        document.getElementById('ops_client_name').textContent = booking.clientName;
+        document.getElementById('ops_service').textContent = booking.service;
+        const statusEl = document.getElementById('ops_current_status');
+        statusEl.textContent = booking.status;
+        statusEl.style.color = getStatusColor(booking.status);
+
+        setVal('ops_assigned_guide', booking.assignedGuide || '');
+        setVal('ops_assigned_transfer', booking.assignedTransfer || '');
+        setVal('ops_booking_status', booking.status);
+    }
+
+    function handleOpsBookingFormSubmit(event) {
+        event.preventDefault();
+        const id = getVal('ops_booking_id');
+        const assignedGuide = getVal('ops_assigned_guide');
+        const assignedTransfer = getVal('ops_assigned_transfer');
+        let status = getVal('ops_booking_status');
+
+        const index = bookingsData.findIndex(b => b.id === id);
+        if (index !== -1) {
+            // Logic to update status if guide/transfer assigned
+            if (assignedGuide && assignedTransfer && (status === 'Pending Guide' || status === 'Pending Transfer')) {
+                status = 'Confirmed';
+            } else if (assignedGuide && status === 'Pending Transfer') {
+                // Keep Pending Transfer if only guide is assigned
+            } else if (assignedTransfer && status === 'Pending Guide') {
+                // Keep Pending Guide if only transfer is assigned
+            }
+
+
+            bookingsData[index] = { ...bookingsData[index], assignedGuide, assignedTransfer, status };
+            alert('Booking updated successfully!');
+            renderOpsBookingsTable();
+            document.getElementById('opsBookingFormContainer').style.display = 'none';
+        }
+    }
+
+    // Guide Management
+    function renderGuidesTable() {
+        const tableBody = document.querySelector('#guidesTable tbody');
+        tableBody.innerHTML = '';
+        document.getElementById('guideFormContainer').style.display = 'none';
+
+        tourGuidesData.forEach(guide => {
+            const row = tableBody.insertRow();
+            row.insertCell().textContent = guide.name;
+            row.insertCell().textContent = guide.specialization;
+            row.insertCell().textContent = guide.phone;
+            const statusCell = row.insertCell();
+            statusCell.textContent = guide.status;
+            statusCell.style.color = getStatusColor(guide.status);
+
+            const actionsCell = row.insertCell();
+            actionsCell.appendChild(createActionButton('Edit', 'edit', () => showGuideForm(guide)));
+            actionsCell.appendChild(createActionButton('Delete', 'delete', () => deleteGuide(guide.id)));
+        });
+    }
+
+    function showGuideForm(guide = {}) {
+        document.getElementById('guideFormContainer').style.display = 'block';
+        setVal('guide_id', guide.id || '');
+        setVal('guide_name', guide.name || '');
+        setVal('guide_specialization', guide.specialization || '');
+        setVal('guide_phone', guide.phone || '');
+        setVal('guide_status', guide.status || 'Active');
+    }
+
+    function handleGuideFormSubmit(event) {
+        event.preventDefault();
+        const id = getVal('guide_id');
+        const name = getVal('guide_name');
+        const specialization = getVal('guide_specialization');
+        const phone = getVal('guide_phone');
+        const status = getVal('guide_status');
+
+        if (!name) {
+            alert('Guide name is required.');
+            return;
+        }
+
+        if (id) {
+            const index = tourGuidesData.findIndex(g => g.id === id);
+            if (index !== -1) {
+                tourGuidesData[index] = { id, name, specialization, phone, status };
+                alert('Guide updated successfully!');
+            }
+        } else {
+            const newId = generateUniqueId('TG');
+            tourGuidesData.push({ id: newId, name, specialization, phone, status });
+            alert('New guide added successfully!');
+        }
+        renderGuidesTable();
+        document.getElementById('guideFormContainer').style.display = 'none';
+    }
+
+    function deleteGuide(idToDelete) {
+        if (confirm(`Are you sure you want to delete this guide?`)) {
+            tourGuidesData = tourGuidesData.filter(guide => guide.id !== idToDelete);
+            alert('Guide deleted.');
+            renderGuidesTable();
+        }
+    }
+
+    // Vehicle Management
+    function renderVehiclesTable() {
+        const tableBody = document.querySelector('#vehiclesTable tbody');
+        tableBody.innerHTML = '';
+        document.getElementById('vehicleFormContainer').style.display = 'none';
+
+        vehiclesData.forEach(vehicle => {
+            const row = tableBody.insertRow();
+            row.insertCell().textContent = vehicle.plate;
+            row.insertCell().textContent = vehicle.type;
+            row.insertCell().textContent = vehicle.capacity;
+            row.insertCell().textContent = vehicle.driver;
+            const statusCell = row.insertCell();
+            statusCell.textContent = vehicle.status;
+            statusCell.style.color = getStatusColor(vehicle.status);
+
+            const actionsCell = row.insertCell();
+            actionsCell.appendChild(createActionButton('Edit', 'edit', () => showVehicleForm(vehicle)));
+            actionsCell.appendChild(createActionButton('Delete', 'delete', () => deleteVehicle(vehicle.id)));
+        });
+    }
+
+    function showVehicleForm(vehicle = {}) {
+        document.getElementById('vehicleFormContainer').style.display = 'block';
+        setVal('vehicle_id', vehicle.id || '');
+        setVal('vehicle_plate', vehicle.plate || '');
+        setVal('vehicle_type', vehicle.type || '');
+        setVal('vehicle_capacity', vehicle.capacity || '');
+        setVal('vehicle_driver', vehicle.driver || '');
+        setVal('vehicle_status', vehicle.status || 'Available');
+    }
+
+    function handleVehicleFormSubmit(event) {
+        event.preventDefault();
+        const id = getVal('vehicle_id');
+        const plate = getVal('vehicle_plate');
+        const type = getVal('vehicle_type');
+        const capacity = parseInt(getVal('vehicle_capacity'));
+        const driver = getVal('vehicle_driver');
+        const status = getVal('vehicle_status');
+
+        if (!plate || isNaN(capacity)) {
+            alert('Plate number and valid capacity are required.');
+            return;
+        }
+
+        if (id) {
+            const index = vehiclesData.findIndex(v => v.id === id);
+            if (index !== -1) {
+                vehiclesData[index] = { id, plate, type, capacity, driver, status };
+                alert('Vehicle updated successfully!');
+            }
+        } else {
+            const newId = generateUniqueId('V');
+            vehiclesData.push({ id: newId, plate, type, capacity, driver, status });
+            alert('New vehicle added successfully!');
+        }
+        renderVehiclesTable();
+        document.getElementById('vehicleFormContainer').style.display = 'none';
+    }
+
+    function deleteVehicle(idToDelete) {
+        if (confirm(`Are you sure you want to delete this vehicle?`)) {
+            vehiclesData = vehiclesData.filter(vehicle => vehicle.id !== idToDelete);
+            alert('Vehicle deleted.');
+            renderVehiclesTable();
+        }
+    }
+
+
+    // --- Tour Guide Functions ---
+    function renderGuideUpcomingTours() {
+        const tableBody = document.querySelector('#guideUpcomingToursTable tbody');
+        tableBody.innerHTML = '';
+        const now = new Date();
+        const upcomingTours = bookingsData.filter(booking =>
+            booking.assignedGuide === loggedInUser.name &&
+            new Date(booking.date) >= now &&
+            (booking.status === 'Confirmed' || booking.status === 'Pending Guide')
+        );
+
+        if (upcomingTours.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="6">No upcoming tours assigned.</td></tr>';
+            return;
+        }
+
+        upcomingTours.forEach(tour => {
+            const row = tableBody.insertRow();
+            row.insertCell().textContent = tour.id;
+            row.insertCell().textContent = tour.clientName;
+            row.insertCell().textContent = tour.service;
+            row.insertCell().textContent = tour.date;
+            const statusCell = row.insertCell();
+            statusCell.textContent = tour.status;
+            statusCell.style.color = getStatusColor(tour.status);
+
+            const actionsCell = row.insertCell();
+            if (tour.status === 'Confirmed' || tour.status === 'Pending Guide') {
+                actionsCell.appendChild(createActionButton('Mark Completed', 'edit', () => markBookingCompleted(tour.id, 'guide')));
+            }
+            actionsCell.appendChild(createActionButton('View Details', 'view', () => openModal(`
+                <h4>Booking ID: ${tour.id}</h4>
+                <p><strong>Client:</strong> ${tour.clientName}</p>
+                <p><strong>Service:</strong> ${tour.service}</p>
+                <p><strong>Date:</strong> ${tour.date}</p>
+                <p><strong>Status:</strong> <span style="color:${getStatusColor(tour.status)}; font-weight:bold;">${tour.status}</span></p>
+                <p><strong>Transfer:</strong> ${tour.assignedTransfer || 'Not assigned yet'}</p>
+            `)));
+        });
+    }
+
+    function renderGuidePastTours() {
+        const tableBody = document.querySelector('#guidePastToursTable tbody');
+        tableBody.innerHTML = '';
+        const now = new Date();
+        const pastTours = bookingsData.filter(booking =>
+            booking.assignedGuide === loggedInUser.name &&
+            new Date(booking.date) < now &&
+            booking.status === 'Completed' // Assuming only completed tours are in 'past' for this view
+        );
+
+        if (pastTours.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5">No past tours recorded.</td></tr>';
+            return;
+        }
+
+        pastTours.forEach(tour => {
+            const row = tableBody.insertRow();
+            row.insertCell().textContent = tour.id;
+            row.insertCell().textContent = tour.clientName;
+            row.insertCell().textContent = tour.service;
+            row.insertCell().textContent = tour.date;
+            const statusCell = row.insertCell();
+            statusCell.textContent = tour.status;
+            statusCell.style.color = getStatusColor(tour.status);
+        });
+    }
+
+    // --- Transfer Functions ---
+    function renderTransferUpcoming() {
+        const tableBody = document.querySelector('#transferUpcomingTable tbody');
+        tableBody.innerHTML = '';
+        const now = new Date();
+        const upcomingTransfers = bookingsData.filter(booking =>
+            booking.assignedTransfer === loggedInUser.name &&
+            new Date(booking.date) >= now &&
+            (booking.status === 'Confirmed' || booking.status === 'Pending Transfer')
+        );
+
+        if (upcomingTransfers.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="7">No upcoming transfers assigned.</td></tr>';
+            return;
+        }
+
+        upcomingTransfers.forEach(transfer => {
+            const row = tableBody.insertRow();
+            row.insertCell().textContent = transfer.id;
+            row.insertCell().textContent = transfer.clientName;
+            row.insertCell().textContent = transfer.service;
+            row.insertCell().textContent = transfer.date;
+            row.insertCell().textContent = vehiclesData.find(v => v.driver === transfer.assignedTransfer)?.plate || 'N/A';
+            const statusCell = row.insertCell();
+            statusCell.textContent = transfer.status;
+            statusCell.style.color = getStatusColor(transfer.status);
+
+            const actionsCell = row.insertCell();
+            if (transfer.status === 'Confirmed' || transfer.status === 'Pending Transfer') {
+                actionsCell.appendChild(createActionButton('Mark Completed', 'edit', () => markBookingCompleted(transfer.id, 'transfer')));
+            }
+            actionsCell.appendChild(createActionButton('View Details', 'view', () => openModal(`
+                <h4>Booking ID: ${transfer.id}</h4>
+                <p><strong>Client:</strong> ${transfer.clientName}</p>
+                <p><strong>Service:</strong> ${transfer.service}</p>
+                <p><strong>Date:</strong> ${transfer.date}</p>
+                <p><strong>Vehicle:</strong> ${vehiclesData.find(v => v.driver === transfer.assignedTransfer)?.plate || 'N/A'}</p>
+                <p><strong>Status:</strong> <span style="color:${getStatusColor(transfer.status)}; font-weight:bold;">${transfer.status}</span></p>
+                <p><strong>Guide:</strong> ${transfer.assignedGuide || 'Not assigned yet'}</p>
+            `)));
+        });
+    }
+
+    function renderTransferHistory() {
+        const tableBody = document.querySelector('#transferHistoryTable tbody');
+        tableBody.innerHTML = '';
+        const now = new Date();
+        const pastTransfers = bookingsData.filter(booking =>
+            booking.assignedTransfer === loggedInUser.name &&
+            new Date(booking.date) < now &&
+            booking.status === 'Completed'
+        );
+
+        if (pastTransfers.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="6">No past transfers recorded.</td></tr>';
+            return;
+        }
+
+        pastTransfers.forEach(transfer => {
+            const row = tableBody.insertRow();
+            row.insertCell().textContent = transfer.id;
+            row.insertCell().textContent = transfer.clientName;
+            row.insertCell().textContent = transfer.service;
+            row.insertCell().textContent = transfer.date;
+            row.insertCell().textContent = vehiclesData.find(v => v.driver === transfer.assignedTransfer)?.plate || 'N/A';
+            const statusCell = row.insertCell();
+            statusCell.textContent = transfer.status;
+            statusCell.style.color = getStatusColor(transfer.status);
+        });
+    }
+
+    // Common function for guide/transfer to mark booking as completed
+    function markBookingCompleted(bookingId, role) {
+        const index = bookingsData.findIndex(b => b.id === bookingId);
+        if (index !== -1) {
+            if (confirm(`Are you sure you want to mark booking ${bookingId} as Completed?`)) {
+                bookingsData[index].status = 'Completed';
+                alert(`Booking ${bookingId} marked as Completed.`);
+                if (role === 'guide') {
+                    renderGuideUpcomingTours();
+                } else if (role === 'transfer') {
+                    renderTransferUpcoming();
+                }
+            }
+        }
+    }
+
+
+    // --- Accounting Functions ---
+    function updateAccountingDashboardMetrics() {
+        const totalIncomeElement = document.getElementById('totalIncomeMock');
+        const totalExpensesElement = document.getElementById('totalExpensesMock');
+        const netProfitElement = document.getElementById('netProfitMock');
+
+        let totalIncome = 0;
+        let totalExpenses = 0;
+
+        transactionsData.forEach(trx => {
+            if (trx.status === 'Paid' || (trx.status === 'Pending' && trx.type === 'Income')) { // Include pending income for potential
+                if (trx.type === 'Income') {
+                    totalIncome += parseFloat(trx.amount);
+                } else if (trx.type === 'Expense') {
+                    totalExpenses += parseFloat(trx.amount);
+                }
+            }
+        });
+
+        totalIncomeElement.textContent = totalIncome.toFixed(2);
+        totalExpensesElement.textContent = totalExpenses.toFixed(2);
+        netProfitElement.textContent = (totalIncome - totalExpenses).toFixed(2);
+    }
+
+    function renderTransactionsTable() {
+        const tableBody = document.querySelector('#transactionsTable tbody');
+        tableBody.innerHTML = '';
+        document.getElementById('transactionFormContainer').style.display = 'none';
+
+        transactionsData.forEach(trx => {
+            const row = tableBody.insertRow();
+            row.insertCell().textContent = trx.id;
+            row.insertCell().textContent = trx.type;
+            row.insertCell().textContent = trx.description;
+            row.insertCell().textContent = `$${parseFloat(trx.amount).toFixed(2)}`;
+            row.insertCell().textContent = trx.date;
+            const statusCell = row.insertCell();
+            statusCell.textContent = trx.status;
+            statusCell.style.color = getStatusColor(trx.status);
+
+            const actionsCell = row.insertCell();
+            actionsCell.appendChild(createActionButton('Edit', 'edit', () => showTransactionForm(trx)));
+            actionsCell.appendChild(createActionButton('Delete', 'delete', () => deleteTransaction(trx.id)));
+        });
+    }
+
+    function showTransactionForm(trx = {}) {
+        document.getElementById('transactionFormContainer').style.display = 'block';
+        setVal('transaction_id', trx.id || '');
+        setVal('transaction_type', trx.type || 'Income');
+        setVal('transaction_description', trx.description || '');
+        setVal('transaction_amount', trx.amount || '');
+        setVal('transaction_date', trx.date || new Date().toISOString().split('T')[0]); // Default to today
+        setVal('transaction_status', trx.status || 'Pending');
+    }
+
+    function handleTransactionFormSubmit(event) {
+        event.preventDefault();
+        const id = getVal('transaction_id');
+        const type = getVal('transaction_type');
+        const description = getVal('transaction_description');
+        const amount = parseFloat(getVal('transaction_amount'));
+        const date = getVal('transaction_date');
+        const status = getVal('transaction_status');
+
+        if (!description || isNaN(amount) || !date || !status) {
+            alert('Please fill all required fields correctly.');
+            return;
+        }
+
+        if (id) {
+            const index = transactionsData.findIndex(t => t.id === id);
+            if (index !== -1) {
+                transactionsData[index] = { id, type, description, amount, date, status, bookingId: transactionsData[index].bookingId }; // Keep bookingId if exists
+                alert('Transaction updated successfully!');
+            }
+        } else {
+            const newId = generateUniqueId('TRX');
+            transactionsData.push({ id: newId, type, description, amount, date, status });
+            alert('New transaction added successfully!');
+        }
+        renderTransactionsTable();
+        document.getElementById('transactionFormContainer').style.display = 'none';
+        updateAccountingDashboardMetrics(); // Update dashboard after changes
+    }
+
+    function deleteTransaction(idToDelete) {
+        if (confirm(`Are you sure you want to delete transaction ${idToDelete}?`)) {
+            transactionsData = transactionsData.filter(trx => trx.id !== idToDelete);
+            alert('Transaction deleted.');
+            renderTransactionsTable();
+            updateAccountingDashboardMetrics();
+        }
+    }
+
+    function renderInvoicesTable() {
+        const tableBody = document.querySelector('#invoicesTable tbody');
+        tableBody.innerHTML = '';
+        document.getElementById('invoiceDetailsView').style.display = 'none';
+
+        const invoices = transactionsData.filter(trx => trx.type === 'Income'); // Invoices are income transactions
+
+        if (invoices.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="6">No invoices found.</td></tr>';
+            return;
+        }
+
+        invoices.forEach(invoice => {
+            const row = tableBody.insertRow();
+            row.insertCell().textContent = invoice.id;
+            row.insertCell().textContent = invoice.description;
+            row.insertCell().textContent = `$${parseFloat(invoice.amount).toFixed(2)}`;
+            row.insertCell().textContent = invoice.date;
+            const statusCell = row.insertCell();
+            statusCell.textContent = invoice.status;
+            statusCell.style.color = getStatusColor(invoice.status);
+
+            const actionsCell = row.insertCell();
+            actionsCell.appendChild(createActionButton('View', 'view', () => viewInvoiceDetails(invoice)));
+            // Optionally add edit/delete if you want accounting to edit invoices directly
+        });
+    }
+
+    let currentInvoiceForPDF = null;
+
+    function viewInvoiceDetails(invoice) {
+        document.getElementById('invoicesTable').parentNode.style.display = 'none'; // Hide table
+        document.getElementById('invoiceDetailsView').style.display = 'block';
+
+        setVal('viewInvoiceId', invoice.id);
+        setVal('viewInvoiceTrxId', invoice.id);
+        setVal('viewInvoiceDescription', invoice.description);
+        setVal('viewInvoiceAmount', `$${parseFloat(invoice.amount).toFixed(2)}`);
+        setVal('viewInvoiceDate', invoice.date);
+        const statusElement = document.getElementById('viewInvoiceStatus');
+        statusElement.textContent = invoice.status;
+        statusElement.style.color = getStatusColor(invoice.status);
+
+        currentInvoiceForPDF = invoice; // Store for PDF generation
+    }
+
+    function generateInvoicePDF() {
+        if (!currentInvoiceForPDF) {
+            alert("No invoice selected for PDF generation.");
+            return;
+        }
+
+        const invoice = currentInvoiceForPDF;
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        doc.setFontSize(24);
+        doc.setTextColor(13, 189, 155);
+        doc.text("INVOICE", 105, 20, null, null, "center");
+
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text("Habiby Tour", 20, 30);
+        doc.text("123 Tourism St, Dubai, UAE", 20, 35);
+        doc.text("Phone: +971 50 123 4567", 20, 40);
+        doc.text("Email: info@habibytour.com", 20, 45);
+
+        doc.setFontSize(12);
+        doc.setTextColor(51, 51, 51);
+        doc.text(`Invoice No: ${invoice.id}`, 140, 30);
+        doc.text(`Date: ${invoice.date}`, 140, 37);
+        doc.text(`Status: ${invoice.status}`, 140, 44);
+
+        doc.setDrawColor(13, 189, 155);
+        doc.line(20, 50, 190, 50);
+
+        let y = 60;
+        doc.setFontSize(14);
+        doc.setTextColor(10, 163, 133);
+        doc.text("Bill To:", 20, y);
+        y += 7;
+        doc.setFontSize(12);
+        doc.setTextColor(51, 51, 51);
+        doc.text(invoice.description.includes('-') ? invoice.description.split('-')[1].trim() : 'Client Name (N/A)', 20, y); // Try to parse client from description
+        doc.text("Customer Address (If available in booking data)", 20, y + 7); // Placeholder for actual client address
+        y += 15;
+
+        // Table Header
+        doc.setFillColor(13, 189, 155); // #0dbd9b
+        doc.rect(20, y, 170, 10, 'F');
+        doc.setFontSize(12);
+        doc.setTextColor(255, 255, 255);
+        doc.text("Description", 25, y + 7);
+        doc.text("Amount", 165, y + 7);
+        y += 10;
+
+        // Table Row
+        doc.setFontSize(12);
+        doc.setTextColor(51, 51, 51);
+        doc.text(invoice.description, 25, y + 7);
+        doc.text(`$${parseFloat(invoice.amount).toFixed(2)}`, 165, y + 7);
+        y += 10;
+
+        doc.setDrawColor(200, 200, 200); // Light grey
+        doc.line(20, y + 5, 190, y + 5);
+        y += 15;
+
+        doc.setFontSize(14);
+        doc.setTextColor(10, 163, 133);
+        doc.text(`Total Due: $${parseFloat(invoice.amount).toFixed(2)}`, 140, y);
+        y += 10;
+
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text("Thank you for your business!", 105, doc.internal.pageSize.height - 20, null, null, "center");
+
+        doc.save(`HabibyTour_Invoice_${invoice.id}.pdf`);
+        alert("Invoice PDF generated!");
+    }
+
+
+    // --- Initial Load ---
+    // Make sure to load the main content when app starts, potentially based on role
+    // This is currently handled by `setupSidebar` which calls `loadSection`
+</script>
+</body>
+</html>
